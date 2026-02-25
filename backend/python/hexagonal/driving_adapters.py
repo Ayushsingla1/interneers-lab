@@ -9,7 +9,12 @@ class UserController:
     def request_handler(self,request : HttpRequest):
 
         try:
-            user = self.create_user_service.execute(driving_ports.CreateUser(request.GET.get("name","cristiano"),request.GET.get("email","random@gmail.com")))
+            self.create_user_service.execute(
+                driving_ports.CreateUser(
+                    request.GET.get("name","cristiano"),
+                    request.GET.get("email","random@gmail.com")
+                    )
+                )
             return HttpResponse(b"User created successfully")
         except:
             return HttpResponse(b"User already exists", status=409)

@@ -1,7 +1,7 @@
-from . import core, use_cases, driven_ports, driving_ports
+from . import core, driven_ports, driving_ports
 from random import randint
 
-class CreateUserService(use_cases.CreateUserUseCase):
+class CreateUserService(driving_ports.CreateUserUseCase):
 
     def __init__(self, user_repositorty : driven_ports.UserRepositoryInterface):
         self.user_repositorty = user_repositorty
