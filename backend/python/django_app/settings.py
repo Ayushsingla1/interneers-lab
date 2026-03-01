@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "hexagonal"
+    "rest_framework",
+    "hexagonal",
+    "week2"
 ]
 
 MIDDLEWARE = [
