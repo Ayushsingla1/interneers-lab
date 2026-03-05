@@ -1,0 +1,22 @@
+from typing import ClassVar
+
+from mongoengine import DecimalField, Document, IntField, QuerySet, StringField
+from mongoengine.fields import ListField
+
+# Create your models here.
+#
+
+
+class Product(Document):
+    objects: ClassVar[QuerySet]
+
+    name = StringField(max_length=100)
+    description = StringField()
+    category = ListField(StringField())
+    price = DecimalField(precision=2, min_value=0)
+    quantity = IntField(min_value=1)
+    brand = StringField(unique_with="name")
+
+    meta = {
+        "indexes": ["brand", "category", "name"],
+    }

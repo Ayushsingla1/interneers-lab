@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "hexagonal",
-    "week2"
+    "week2",
+    "week3",
+    "mongoengine",
 ]
 
 MIDDLEWARE = [
