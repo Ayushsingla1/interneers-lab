@@ -1,6 +1,8 @@
-from models import Product
 from mongoengine import DoesNotExist
-from product_interface import ProductInterface
+from mongoengine.base.fields import ObjectId
+
+from .models import Product
+from .product_interface import ProductInterface
 
 
 class ProductRepositoryError(Exception):
@@ -20,7 +22,7 @@ class ProductRepository(ProductInterface):
 
     def product_by_id(self, id: str) -> Product:
         try:
-            product = Product.objects.get(id=id)
+            product = Product.objects.get(id=ObjectId(id))
             return product
         except DoesNotExist:
             raise ProductNotFoundError("No product with matching Id")
@@ -37,7 +39,8 @@ class ProductRepository(ProductInterface):
 
     def delete_product(self, id: str):
         try:
-            deleted = Product.objects(id=id).delete()
+            deleted = Product.objects(id=ObjectId(id)).delete()
+            print(deleted)
             if deleted == 0:
                 raise ProductNotFoundError(f"No product with id: {id}")
         except ProductNotFoundError:

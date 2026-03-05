@@ -1,7 +1,7 @@
 from typing import List
 
-from models import Product
-from product_interface import ProductInterface
+from .models import Product
+from .product_interface import ProductInterface
 
 
 class ProductServices(ProductInterface):

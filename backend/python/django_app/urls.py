@@ -1,16 +1,18 @@
 from django.contrib import admin
-from django.urls import path, include
-from django.http import JsonResponse, HttpRequest
+from django.http import HttpRequest, JsonResponse
+from django.urls import include, path
 
-def hello_world(request : HttpRequest):
-   name = request.GET.get("name","World")
 
-   return JsonResponse({"message" : f"Hello, {name}!"})
+def hello_world(request: HttpRequest):
+    name = request.GET.get("name", "World")
+
+    return JsonResponse({"message": f"Hello, {name}!"})
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     # path('hello/', hello_world),
-    path('user/', include("hexagonal.urls")),
-    path('',include("week2.urls"))
+    path("user/", include("hexagonal.urls")),
+    # path('',include("week2.urls"))
+    path("", include("week3.urls")),
 ]

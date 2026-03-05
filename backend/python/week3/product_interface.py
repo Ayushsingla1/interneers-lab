@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from models import Product
+from .models import Product
 
 
 class ProductInterface(ABC):

@@ -3,9 +3,6 @@ from typing import ClassVar
 from mongoengine import DecimalField, Document, IntField, QuerySet, StringField
 from mongoengine.fields import ListField
 
-# Create your models here.
-#
-
 
 class Product(Document):
     objects: ClassVar[QuerySet]
