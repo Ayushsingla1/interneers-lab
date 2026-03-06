@@ -12,7 +12,7 @@ product_list = ProductController.as_view(
 )
 
 product_detail = ProductController.as_view(
-    {"get": "retrieve", "delete": "destroy"}, service=service
+    {"get": "retrieve", "delete": "destroy", "put": "put"}, service=service
 )
 
 urlpatterns = [

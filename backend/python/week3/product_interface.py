@@ -6,17 +6,21 @@ from .models import Product
 
 class ProductInterface(ABC):
     @abstractmethod
-    def products(self) -> List[Product]:
+    def get_all(self, **kwargs) -> List[Product]:
         pass
 
     @abstractmethod
-    def product_by_id(self, id: str) -> Product:
+    def get_by_id(self, id: str) -> Product:
         pass
 
     @abstractmethod
-    def add_product(self, **kwargs) -> Product:
+    def add(self, **kwargs) -> Product:
         pass
 
     @abstractmethod
-    def delete_product(self, id: str) -> None:
+    def delete(self, id: str) -> None:
+        pass
+
+    @abstractmethod
+    def update(self, id, **kwargs) -> None:
         pass

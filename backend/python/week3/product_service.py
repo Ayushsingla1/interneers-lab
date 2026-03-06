@@ -8,18 +8,24 @@ class ProductServices(ProductInterface):
     def __init__(self, repository: ProductInterface):
         self.repository = repository
 
-    def products(self) -> List[Product]:
-        return self.repository.products()
+    def get_all(self, **kwargs) -> List[Product]:
+        start = (kwargs["page"] - 1) * kwargs["limit"]
+        end = start + kwargs["limit"]
+        return self.repository.get_all(start=start, end=end)
 
-    def product_by_id(self, id: str) -> Product:
+    def get_by_id(self, id: str) -> Product:
         if not isinstance(id, str):
             raise ValueError("id must be a string")
-        return self.repository.product_by_id(id)
+        return self.repository.get_by_id(id)
 
-    def add_product(self, **kwargs) -> Product:
-        return self.repository.add_product(**kwargs)
+    def add(self, **kwargs) -> Product:
+        return self.repository.add(**kwargs)
 
-    def delete_product(self, id: str) -> None:
+    def delete(self, id: str):
         if not isinstance(id, str):
             raise ValueError("id must be a string")
-        self.repository.delete_product(id)
+        self.repository.delete(id)
+
+    def update(self, id: str, **kwargs):
+        update_fields = {f"set__{k}": v for k, v in kwargs.items()}
+        return self.repository.update(id, **update_fields)
