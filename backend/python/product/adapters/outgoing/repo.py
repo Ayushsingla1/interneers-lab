@@ -3,45 +3,45 @@ from typing import List
 from mongoengine import DoesNotExist
 from mongoengine.base.fields import ObjectId
 
-from .models import Product
-from .product_interface import ProductInterface
+from product.domain.entities.product import Product
+from product.domain.ports.outgoing import product_repo_port
+
+from ..custom_exceptions import ProductNotFoundError, ProductRepositoryError
+from .mapping import _to_document, _to_entity
+from .models import ProductDocument
 
 
-class ProductRepositoryError(Exception):
-    pass
-
-
-class ProductNotFoundError(ProductRepositoryError):
-    pass
-
-
-class ProductRepository(ProductInterface):
-    def get_all(self, **kwargs) -> List[Product]:
+class ProductRepository(product_repo_port.ProductRepositoryPorts):
+    def get_all(self, start: int, end: int) -> List[Product]:
         try:
-            return list(Product.objects[kwargs["start"] : kwargs["end"]])
+            documents = list(ProductDocument.objects[start:end])
+            products = []
+            for doc in documents:
+                products.append(_to_entity(doc))
+            return products
         except Exception as e:
             raise ProductRepositoryError("Unable to fetch Products.") from e
 
     def get_by_id(self, id: str) -> Product:
         try:
-            product = Product.objects.get(id=ObjectId(id))
-            return product
+            document = ProductDocument.objects.get(id=ObjectId(id))
+            return _to_entity(document)
         except DoesNotExist:
             raise ProductNotFoundError("No product with matching Id")
         except Exception as e:
             raise ProductRepositoryError("Unable to fetch Product") from e
 
-    def add(self, **kwargs) -> Product:
+    def add(self, item: Product) -> Product:
         try:
-            product = Product(**kwargs)
-            product.save()
-            return product
+            document = _to_document(item)
+            document.save()
+            return _to_entity(document)
         except Exception as e:
             raise ProductRepositoryError("Unable to save product") from e
 
     def delete(self, id: str):
         try:
-            deleted = Product.objects(id=ObjectId(id)).delete()
+            deleted = ProductDocument.objects(id=ObjectId(id)).delete()
             if deleted == 0:
                 raise ProductNotFoundError(f"No product with id: {id}")
         except ProductNotFoundError:
@@ -51,7 +51,7 @@ class ProductRepository(ProductInterface):
 
     def update(self, id, **kwargs):
         try:
-            updated = Product.objects(id=ObjectId(id)).update_one(**kwargs)
+            updated = ProductDocument.objects(id=ObjectId(id)).update_one(**kwargs)
             if updated == 0:
                 raise ProductNotFoundError(f"No product with id: {id}")
         except ProductNotFoundError:

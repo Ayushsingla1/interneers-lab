@@ -3,12 +3,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from .product_interface import ProductInterface
-from .product_repository import (
-    ProductNotFoundError,
-    ProductRepositoryError,
-)
-from .serializers import ProductSerializer
+from product.domain.entities.product import Product
+from product.services.product_service import ProductService
+
+from ..custom_exceptions import ProductNotFoundError, ProductRepositoryError
+from ..serializers import ProductSerializer
 
 
 def isParsable(val) -> int | None:
@@ -24,7 +23,7 @@ def isParsable(val) -> int | None:
 
 
 class ProductController(ViewSet):
-    service: ProductInterface = None
+    service: ProductService = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -53,14 +52,30 @@ class ProductController(ViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
+        print("hi")
         data = ProductSerializer(data=request.data)
         try:
             data.is_valid(raise_exception=True)
-            print("hi")
-            product = ProductSerializer(self.service.add(**(data.validated_data)))
+            valid_data: dict = data.validated_data
+
+            print(valid_data["name"])
+
+            prod = Product(
+                name=valid_data["name"],
+                description=valid_data["description"],
+                price=valid_data["price"],
+                quantity=valid_data["quantity"],
+                brand=valid_data["brand"],
+            )
+
+            print(prod)
+
+            product = ProductSerializer(self.service.add(prod))
             return Response(status=status.HTTP_201_CREATED, data=product.data)
         except ValidationError as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data="unable to validate data", status=status.HTTP_400_BAD_REQUEST
+            )
         except ProductRepositoryError:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

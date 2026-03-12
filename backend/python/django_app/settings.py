@@ -41,8 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "hexagonal",
-    "week2",
-    "week3",
+    "product",
     "mongoengine",
 ]
 
