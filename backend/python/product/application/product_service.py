@@ -1,6 +1,6 @@
 from typing import List
 
-from product.domain.entities.product import Product
+from product.domain.entities.product import Product, ProductUpdateRequest
 from product.domain.ports.incoming import product_service_port
 from product.domain.ports.outgoing import product_repo_port
 
@@ -20,9 +20,8 @@ class ProductService(product_service_port.ProductServicePorts):
     def add(self, item: Product) -> Product:
         return self.product_repository.add(item)
 
-    def update(self, id: str, **kwargs):
-        update_fields = {f"set__{k}": v for k, v in kwargs.items()}
-        return self.product_repository.update(id, **update_fields)
+    def update(self, id: str, item: ProductUpdateRequest):
+        return self.product_repository.update(id, item)
 
     def delete(self, id: str):
         return self.product_repository.delete(id)

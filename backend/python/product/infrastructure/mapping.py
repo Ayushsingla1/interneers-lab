@@ -1,8 +1,9 @@
-from product.adapters.outgoing.models import ProductDocument
 from product.domain.entities.product import Product
 
+from .models import ProductDocument
 
-def _to_entity(product) -> Product:
+
+def _to_entity(product: ProductDocument) -> Product:
     return Product(
         name=product.name,
         description=product.description,
@@ -23,4 +24,5 @@ def _to_document(product: Product) -> ProductDocument:
         brand=product.brand,
         category=product.category,
         quantity=product.quantity,
+        price=product.price,
     )

@@ -1,6 +1,6 @@
-from .adapters.incoming.views import ProductController
-from .adapters.outgoing.repo import ProductRepository
-from .services.product_service import ProductService
+from product.api.views import ProductController
+from product.application.product_service import ProductService
+from product.infrastructure.repo import ProductRepository
 
 repository = ProductRepository()
 service = ProductService(repository)

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from ...entities.product import Product
+from ...entities.product import Product, ProductUpdateRequest
 
 
 class ProductRepositoryPorts(ABC):
@@ -22,5 +22,5 @@ class ProductRepositoryPorts(ABC):
         pass
 
     @abstractmethod
-    def update(self, id: str, **kwargs):
+    def update(self, id: str, item: ProductUpdateRequest):
         pass

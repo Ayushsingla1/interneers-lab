@@ -3,11 +3,14 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from product.domain.entities.product import Product
-from product.services.product_service import ProductService
+from product.application.product_service import ProductService
+from product.domain.custom_exceptions import (
+    ProductNotFoundError,
+    ProductRepositoryError,
+)
+from product.domain.entities.product import Product, ProductUpdateRequest
 
-from ..custom_exceptions import ProductNotFoundError, ProductRepositoryError
-from ..serializers import ProductSerializer
+from .serializers import ProductSerializer, ProductUpdateSerializer
 
 
 def isParsable(val) -> int | None:
@@ -52,14 +55,10 @@ class ProductController(ViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
-        print("hi")
         data = ProductSerializer(data=request.data)
         try:
             data.is_valid(raise_exception=True)
             valid_data: dict = data.validated_data
-
-            print(valid_data["name"])
-
             prod = Product(
                 name=valid_data["name"],
                 description=valid_data["description"],
@@ -68,9 +67,8 @@ class ProductController(ViewSet):
                 brand=valid_data["brand"],
             )
 
-            print(prod)
-
             product = ProductSerializer(self.service.add(prod))
+
             return Response(status=status.HTTP_201_CREATED, data=product.data)
         except ValidationError as e:
             return Response(
@@ -98,17 +96,24 @@ class ProductController(ViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request, pk):
-        data = ProductSerializer(data=request.data, partial=True)
+        data = ProductUpdateSerializer(data=request.data)
+        print("hi")
         try:
             data.is_valid(raise_exception=True)
             validated_data = data.validated_data
-            print(validated_data)
-            if validated_data == {}:
-                raise ValidationError("No fields provided to updated")
-            self.service.update(id=pk, **validated_data)
+            updated_fields = ProductUpdateRequest(**validated_data)
+
+            if updated_fields.has_changes():
+                print("yooo")
+                self.service.update(pk, updated_fields)
+            else:
+                raise ValidationError("No data provided to update")
+
             return Response(status=status.HTTP_200_OK)
         except ValidationError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                data="Data validation failed", status=status.HTTP_400_BAD_REQUEST
+            )
         except Exception as e:
             print(str(e))
             return Response(status=status.HTTP_400_BAD_REQUEST)
