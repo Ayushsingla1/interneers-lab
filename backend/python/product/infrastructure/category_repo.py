@@ -1,15 +1,11 @@
-from datetime import UTC, datetime
 from typing import List
-
 from mongoengine import DoesNotExist
 from mongoengine.base.fields import ObjectId
 
-import product
 from product.domain.custom_exceptions import (
     CategoryNotFoundError,
     CategoryRepositoryError,
     ProductNotFoundError,
-    ProductRepositoryError,
 )
 from product.domain.entities.product import (
     Product,

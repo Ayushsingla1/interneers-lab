@@ -35,6 +35,7 @@ class ProductController(ViewSet):
         query_params = request.query_params
         page = query_params.get("page") or 1
         limit = query_params.get("limit") or 10
+        category = query_params.get("category")
 
         if isParsable(page) is None or int(page) == 0:
             return Response(
@@ -48,7 +49,7 @@ class ProductController(ViewSet):
             )
         try:
             products = ProductGetSerializer(
-                self.service.get_all(page=int(page), limit=int(limit)), many=True
+                self.service.get_all(page=int(page), limit=int(limit), category=category), many=True
             )
             return Response(products.data, status=status.HTTP_200_OK)
         except ProductRepositoryError:

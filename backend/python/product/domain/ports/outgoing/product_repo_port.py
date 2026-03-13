@@ -10,7 +10,7 @@ class ProductRepositoryPorts(ABC):
         pass
 
     @abstractmethod
-    def get_all(self, start: int, end: int) -> List[Product]:
+    def get_all(self, start: int, end: int, category: str = None) -> List[Product]:
         pass
 
     @abstractmethod

@@ -10,7 +10,7 @@ class ProductServicePorts(ABC):
         pass
 
     @abstractmethod
-    def get_all(self, page: int, limit: int) -> List[Product]:
+    def get_all(self, page: int, limit: int, category: str = None) -> List[Product]:
         pass
 
     @abstractmethod

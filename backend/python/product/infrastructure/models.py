@@ -9,6 +9,12 @@ class CategoryDoument(Document):
     title = StringField(max_length=100)
     description = StringField(max_length=255)
 
+    meta = {
+        "indexes" : [
+            "title"
+        ]
+    }
+
 
 class ProductDocument(Document):
     objects: ClassVar[QuerySet]

@@ -6,12 +6,14 @@ from product.composition_root import (
     category_list,
     category_detail,
     category_products,
-    category_product_detail
+    category_product_detail,
+    bulk_product_upload
 )
 
 urlpatterns = [
     path("products/", product_list, name="product-list"),
     path("products/<str:pk>/", product_detail, name="product-detail"),
+    path("product/bulk-upload/", bulk_product_upload, name="bulk-product-upload"),
     path("categories/", category_list, name="category-list"),
     path("categories/<str:pk>/", category_detail, name="category-detail"),
     path("categories/<str:pk>/products/", category_products, name="category-products"),

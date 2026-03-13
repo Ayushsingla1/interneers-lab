@@ -1,5 +1,6 @@
 from product.api.product_views import ProductController
 from product.api.category_views import CategoryController
+from product.api.bulk_upload_views import BulkProductUploadController
 from product.application.product_service import ProductService
 from product.application.category_service import CategoryService
 from product.infrastructure.product_repo import ProductRepository
@@ -34,3 +35,5 @@ category_products = CategoryController.as_view(
 category_product_detail = CategoryController.as_view(
     {"get": "get_product"}, service=category_service
 )
+
+bulk_product_upload = BulkProductUploadController.as_view({"post": "create"}, service=product_service)

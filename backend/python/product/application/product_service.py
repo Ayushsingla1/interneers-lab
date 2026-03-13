@@ -9,10 +9,10 @@ class ProductService(product_service_port.ProductServicePorts):
     def __init__(self, product_repository: product_repo_port.ProductRepositoryPorts):
         self.product_repository = product_repository
 
-    def get_all(self, page: int, limit: int) -> List[Product]:
+    def get_all(self, page: int, limit: int, category : str) -> List[Product]:
         start = (page - 1) * limit
         end = start + limit
-        return self.product_repository.get_all(start, end)
+        return self.product_repository.get_all(start, end, category)
 
     def get_by_id(self, id: str) -> Product:
         return self.product_repository.get_by_id(id)
