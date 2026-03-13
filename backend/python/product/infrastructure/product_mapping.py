@@ -3,7 +3,8 @@ from product.domain.entities.product import Product
 from .models import ProductDocument
 
 
-def _to_entity(product: ProductDocument) -> Product:
+def _to_entity_product(product: ProductDocument) -> Product:
+    print("hi entity")
     return Product(
         name=product.name,
         description=product.description,
@@ -17,7 +18,7 @@ def _to_entity(product: ProductDocument) -> Product:
     )
 
 
-def _to_document(product: Product) -> ProductDocument:
+def _to_document_product(product: Product) -> ProductDocument:
     return ProductDocument(
         name=product.name,
         description=product.description,

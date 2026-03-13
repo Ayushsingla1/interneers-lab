@@ -10,7 +10,7 @@ from product.domain.custom_exceptions import (
 )
 from product.domain.entities.product import Product, ProductUpdateRequest
 
-from .serializers import ProductSerializer, ProductUpdateSerializer
+from .product_serializers import ProductGetSerializer, ProductUpdateSerializer, ProductPostSerializer
 
 
 def isParsable(val) -> int | None:
@@ -47,7 +47,7 @@ class ProductController(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            products = ProductSerializer(
+            products = ProductGetSerializer(
                 self.service.get_all(page=int(page), limit=int(limit)), many=True
             )
             return Response(products.data, status=status.HTTP_200_OK)
@@ -55,19 +55,15 @@ class ProductController(ViewSet):
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
-        data = ProductSerializer(data=request.data)
+        data = ProductPostSerializer(data=request.data)
+        print(data)
         try:
             data.is_valid(raise_exception=True)
             valid_data: dict = data.validated_data
-            prod = Product(
-                name=valid_data["name"],
-                description=valid_data["description"],
-                price=valid_data["price"],
-                quantity=valid_data["quantity"],
-                brand=valid_data["brand"],
-            )
-
-            product = ProductSerializer(self.service.add(prod))
+            print(valid_data)
+            prod = Product(**valid_data)
+            print(prod)
+            product = ProductGetSerializer(self.service.add(prod))
 
             return Response(status=status.HTTP_201_CREATED, data=product.data)
         except ValidationError as e:
@@ -88,7 +84,7 @@ class ProductController(ViewSet):
 
     def retrieve(self, request, pk):
         try:
-            product = ProductSerializer(self.service.get_by_id(id=pk))
+            product = ProductGetSerializer(self.service.get_by_id(id=pk))
             return Response(product.data, status=status.HTTP_200_OK)
         except ProductNotFoundError:
             return Response(status=status.HTTP_404_NOT_FOUND)

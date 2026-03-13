@@ -4,3 +4,11 @@ class ProductRepositoryError(Exception):
 
 class ProductNotFoundError(ProductRepositoryError):
     pass
+
+
+class CategoryRepositoryError(Exception):
+    pass
+
+
+class CategoryNotFoundError(CategoryRepositoryError):
+    pass

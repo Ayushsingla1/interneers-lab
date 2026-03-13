@@ -11,8 +11,8 @@ from product.domain.custom_exceptions import (
 from product.domain.entities.product import Product, ProductUpdateRequest
 from product.domain.ports.outgoing import product_repo_port
 
-from .mapping import _to_document, _to_entity
 from .models import ProductDocument
+from .product_mapping import _to_document_product, _to_entity_product
 
 
 class ProductRepository(product_repo_port.ProductRepositoryPorts):
@@ -21,7 +21,7 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
             documents = list(ProductDocument.objects[start:end])
             products = []
             for doc in documents:
-                products.append(_to_entity(doc))
+                products.append(_to_entity_product(doc))
             return products
         except Exception as e:
             raise ProductRepositoryError("Unable to fetch Products.") from e
@@ -29,7 +29,7 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
     def get_by_id(self, id: str) -> Product:
         try:
             document = ProductDocument.objects.get(id=ObjectId(id))
-            return _to_entity(document)
+            return _to_entity_product(document)
         except DoesNotExist:
             raise ProductNotFoundError("No product with matching Id")
         except Exception as e:
@@ -37,9 +37,10 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
 
     def add(self, item: Product) -> Product:
         try:
-            document = _to_document(item)
+            document = _to_document_product(item)
+            print(document)
             document.save()
-            return _to_entity(document)
+            return _to_entity_product(document)
         except Exception as e:
             raise ProductRepositoryError("Unable to save product") from e
 
