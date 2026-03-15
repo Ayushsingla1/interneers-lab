@@ -1,20 +1,22 @@
 from abc import ABC, abstractmethod
 from typing import List
+from product.application.dto.category import CategoryCreationData, CategoryUpdateData
 
-from ...entities.product import Product, ProductCategory, ProductCategoryUpdateRequest
+from ...entities.product import Product
+from ...entities.category import Category
 
 
 class CategoryRepositoryPorts(ABC):
     @abstractmethod
-    def get_all(self, start: int, end: int) -> List[ProductCategory]:
+    def get_all(self, page: int, limit: int) -> List[Category]:
         pass
 
     @abstractmethod
-    def get_by_id(self, id: str) -> ProductCategory:
+    def get_by_id(self, id: str) -> Category:
         pass
 
     @abstractmethod
-    def add(self, item: ProductCategory) -> ProductCategory:
+    def add(self, item: CategoryCreationData) -> Category:
         pass
 
     @abstractmethod
@@ -22,7 +24,7 @@ class CategoryRepositoryPorts(ABC):
         pass
 
     @abstractmethod
-    def update(self, id: str, item: ProductCategoryUpdateRequest):
+    def update(self, id: str, item: CategoryUpdateData):
         pass
 
     @abstractmethod

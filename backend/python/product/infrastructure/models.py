@@ -5,15 +5,11 @@ from mongoengine import NULLIFY, DecimalField, Document, IntField, QuerySet, Str
 from mongoengine.fields import DateTimeField, ReferenceField
 
 
-class CategoryDoument(Document):
+class CategoryDocument(Document):
     title = StringField(max_length=100)
     description = StringField(max_length=255)
 
-    meta = {
-        "indexes" : [
-            "title"
-        ]
-    }
+    meta = {"indexes": ["title"]}
 
 
 class ProductDocument(Document):
@@ -21,9 +17,9 @@ class ProductDocument(Document):
 
     name = StringField(max_length=100)
     description = StringField()
-    category = ReferenceField(CategoryDoument, reverse_delete_rule=NULLIFY)
+    category = ReferenceField(CategoryDocument, reverse_delete_rule=NULLIFY)
     price = DecimalField(precision=2, min_value=0)
-    quantity = IntField(min_value=0)
+    quantity = IntField(min_value=1)
     brand = StringField(unique_with="name")
     created_at = DateTimeField(default=datetime.now(tz=UTC))
     updated_at = DateTimeField(default=datetime.now(tz=UTC))

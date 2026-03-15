@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from ...entities.product import Product, ProductUpdateRequest
+from product.application.dto.products import ProductCreationData, ProductUpdateData
+
+from ...entities.product import Product
 
 
 class ProductRepositoryPorts(ABC):
@@ -10,11 +12,11 @@ class ProductRepositoryPorts(ABC):
         pass
 
     @abstractmethod
-    def get_all(self, start: int, end: int, category: str = None) -> List[Product]:
+    def get_all(self, page: int, limit: int, category: str = None) -> List[Product]:
         pass
 
     @abstractmethod
-    def add(self, item: Product) -> Product:
+    def add(self, item: ProductCreationData) -> Product:
         pass
 
     @abstractmethod
@@ -22,5 +24,5 @@ class ProductRepositoryPorts(ABC):
         pass
 
     @abstractmethod
-    def update(self, id: str, item: ProductUpdateRequest):
+    def update(self, id: str, item: ProductUpdateData):
         pass

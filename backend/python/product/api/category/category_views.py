@@ -3,17 +3,15 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
+from product.shared.dto.category.request import (
+    CreateCategoryRequest,
+    UpdateCategoryRequest,
+)
 from product.application.category_service import CategoryService
 from product.domain.custom_exceptions import (
     CategoryNotFoundError,
     CategoryRepositoryError,
 )
-from product.domain.entities.product import (
-    ProductCategory,
-    ProductCategoryUpdateRequest,
-)
-from .product_serializers import ProductGetSerializer
-
 from .category_serializers import CategorySerializer, CategoryUpdateSerializer
 
 
@@ -51,10 +49,9 @@ class CategoryController(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            categories = CategorySerializer(
-                self.service.get_all(page=int(page), limit=int(limit)), many=True
-            )
-            return Response(categories.data, status=status.HTTP_200_OK)
+            categories = self.service.get_all(page=int(page), limit=int(limit))
+            serializer = CategorySerializer(categories, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except CategoryRepositoryError:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -62,15 +59,13 @@ class CategoryController(ViewSet):
         data = CategorySerializer(data=request.data)
         try:
             data.is_valid(raise_exception=True)
-            valid_data: dict = data.validated_data
-            category = ProductCategory(
-                title=valid_data["title"],
-                description=valid_data["description"],
-            )
+            validated_data: dict = data.validated_data
 
-            created_category = CategorySerializer(self.service.add(category))
+            category = CreateCategoryRequest(**validated_data)
 
-            return Response(status=status.HTTP_201_CREATED, data=created_category.data)
+            created_category = self.service.add(category)
+            serializer = CategorySerializer(created_category)
+            return Response(status=status.HTTP_201_CREATED, data=serializer.data)
         except ValidationError as e:
             return Response(
                 data="unable to validate data", status=status.HTTP_400_BAD_REQUEST
@@ -89,8 +84,9 @@ class CategoryController(ViewSet):
 
     def retrieve(self, request, pk):
         try:
-            category = CategorySerializer(self.service.get_by_id(id=pk))
-            return Response(category.data, status=status.HTTP_200_OK)
+            category = self.service.get_by_id(id=pk)
+            serializer = CategorySerializer(category)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except CategoryNotFoundError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError:
@@ -101,14 +97,11 @@ class CategoryController(ViewSet):
         try:
             data.is_valid(raise_exception=True)
             validated_data = data.validated_data
-            print(validated_data)
-            updated_fields = ProductCategoryUpdateRequest(**validated_data)
-
-            if updated_fields.has_changes():
-                self.service.update(pk, updated_fields)
-            else:
+            data = UpdateCategoryRequest(**validated_data)
+            if not validated_data or validated_data == {}:
                 raise ValidationError("No data provided to update")
-
+            else:
+                self.service.update(pk, data)
             return Response(status=status.HTTP_200_OK)
         except ValidationError:
             return Response(
@@ -122,8 +115,10 @@ class CategoryController(ViewSet):
     def get_products(self, request, pk):
         try:
             products = self.service.get_all_products(id=pk)
-            products_data = ProductGetSerializer(products, many=True)
-            return Response(products_data.data, status=status.HTTP_200_OK)
+            from product.api.products.product_serializers import ProductGetSerializer
+
+            serializer = ProductGetSerializer(products, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except CategoryNotFoundError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError:
@@ -132,8 +127,10 @@ class CategoryController(ViewSet):
     def get_product(self, request, pk, product_id):
         try:
             product = self.service.get_product(id=pk, product_id=product_id)
-            product_data = ProductGetSerializer(product)
-            return Response(product_data.data, status=status.HTTP_200_OK)
+            from product.api.products.product_serializers import ProductGetSerializer
+
+            serializer = ProductGetSerializer(product)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except CategoryNotFoundError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError:

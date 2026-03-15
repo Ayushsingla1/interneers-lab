@@ -1,20 +1,26 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from ...entities.product import Product, ProductUpdateRequest
+from product.shared.dto.products.request import (
+    CreateProductRequest,
+    UpdateProductRequest,
+)
+from product.shared.dto.products.response import ProductResponse
 
 
 class ProductServicePorts(ABC):
     @abstractmethod
-    def get_by_id(self, id: str) -> Product:
+    def get_by_id(self, id: str) -> ProductResponse:
         pass
 
     @abstractmethod
-    def get_all(self, page: int, limit: int, category: str = None) -> List[Product]:
+    def get_all(
+        self, page: int, limit: int, category: str = None
+    ) -> List[ProductResponse]:
         pass
 
     @abstractmethod
-    def add(self, item: Product) -> Product:
+    def add(self, item: CreateProductRequest) -> ProductResponse:
         pass
 
     @abstractmethod
@@ -22,5 +28,5 @@ class ProductServicePorts(ABC):
         pass
 
     @abstractmethod
-    def update(self, id: str, item: ProductUpdateRequest):
+    def update(self, id: str, item: UpdateProductRequest):
         pass
