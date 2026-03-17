@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from typing import ClassVar
 
 from mongoengine import NULLIFY, DecimalField, Document, IntField, QuerySet, StringField
+from mongoengine.base.document import ValidationError
 from mongoengine.fields import DateTimeField, ReferenceField
 
 
@@ -31,3 +32,8 @@ class ProductDocument(Document):
             "category",
         ],
     }
+
+    def clean(self):
+        if not self.category or not CategoryDocument.objects(id=self.category.id):
+            print("error aaya")
+            raise ValidationError("Category not found")

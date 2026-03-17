@@ -14,9 +14,7 @@ class ProductServicePorts(ABC):
         pass
 
     @abstractmethod
-    def get_all(
-        self, page: int, limit: int, category: str = None
-    ) -> List[ProductResponse]:
+    def get_all(self, page: int, limit: int, category: str) -> List[ProductResponse]:
         pass
 
     @abstractmethod

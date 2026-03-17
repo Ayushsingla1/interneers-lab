@@ -3,20 +3,20 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from product.shared.dto.products.request import (
-    CreateProductRequest,
-    UpdateProductRequest,
-)
 from product.application.product_service import ProductService
 from product.domain.custom_exceptions import (
     ProductNotFoundError,
     ProductRepositoryError,
 )
+from product.shared.dto.products.request import (
+    CreateProductRequest,
+    UpdateProductRequest,
+)
 
 from .product_serializers import (
-    ProductUpdateSerializer,
-    ProductPostSerializer,
     ProductGetSerializer,
+    ProductPostSerializer,
+    ProductUpdateSerializer,
 )
 
 

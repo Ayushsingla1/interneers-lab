@@ -1,17 +1,18 @@
 from typing import List
+
+from product.application.dto.products import ProductCreationData, ProductUpdateData
+from product.application.mappers.product_mapper import (
+    map_product_to_response,
+    map_products_to_responses,
+)
+from product.domain.entities.product import Product
+from product.domain.ports.incoming import product_service_port
+from product.domain.ports.outgoing import product_repo_port
 from product.shared.dto.products.request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
 from product.shared.dto.products.response import ProductResponse
-from product.application.dto.products import ProductCreationData, ProductUpdateData
-from product.domain.entities.product import Product
-from product.domain.ports.incoming import product_service_port
-from product.domain.ports.outgoing import product_repo_port
-from product.application.mappers.product_mapper import (
-    map_product_to_response,
-    map_products_to_responses,
-)
 
 
 class ProductService(product_service_port.ProductServicePorts):
@@ -21,7 +22,9 @@ class ProductService(product_service_port.ProductServicePorts):
     def get_all(self, page: int, limit: int, category: str) -> List[ProductResponse]:
         start = (page - 1) * limit
         end = start + limit
-        products = self.product_repository.get_all(start, end, category)
+        products = self.product_repository.get_all(
+            start=start, end=end, category=category
+        )
         return map_products_to_responses(products)
 
     def get_by_id(self, id: str) -> ProductResponse:

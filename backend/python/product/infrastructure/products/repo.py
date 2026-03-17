@@ -12,12 +12,11 @@ from product.domain.custom_exceptions import (
 from product.domain.entities.product import Product
 from product.domain.ports.outgoing import product_repo_port
 
-from ..models import ProductDocument
+from ..models import CategoryDocument, ProductDocument
 from .mapping import _to_document_product, _to_entity_product
 
 
 class ProductRepository(product_repo_port.ProductRepositoryPorts):
-
     def get_by_id(self, id: str) -> Product:
         try:
             document = ProductDocument.objects.get(id=ObjectId(id))
@@ -28,11 +27,13 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
         except Exception as e:
             raise ProductRepositoryError("Unable to fetch Product") from e
 
-    def get_all(self, start: int, end: int, category: str = None) -> List[Product]:
+    def get_all(self, start: int, end: int, category: str) -> List[Product]:
         try:
+            print(start, " ", end, " ", category)
             filters = {}
             if category is not None:
                 cat_obj = CategoryDocument.objects(title=category)[0]
+                print(cat_obj)
                 if cat_obj:
                     filters["category"] = cat_obj.id
                 else:
