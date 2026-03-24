@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from product.application.dto.products import ProductCreationData, ProductUpdateData
@@ -19,11 +20,11 @@ class ProductService(product_service_port.ProductServicePorts):
     def __init__(self, product_repository: product_repo_port.ProductRepositoryPorts):
         self.product_repository = product_repository
 
-    def get_all(self, page: int, limit: int, category: str) -> List[ProductResponse]:
+    def get_all(self, page: int, limit: int, category: str, date: datetime | None) -> List[ProductResponse]:
         start = (page - 1) * limit
         end = start + limit
         products = self.product_repository.get_all(
-            start=start, end=end, category=category
+            start=start, end=end, category=category, date = date
         )
         return map_products_to_responses(products)
 

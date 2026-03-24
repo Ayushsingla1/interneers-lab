@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from datetime import datetime
 
 from product.application.product_service import ProductService
 from product.domain.custom_exceptions import (
@@ -21,15 +22,21 @@ from .product_serializers import (
 
 
 def isParsable(val) -> int | None:
-
     if isinstance(val, int):
         return val
-
     try:
         val = int(val)
         return val
     except Exception:
         return None
+
+def is_valid_date(val) -> bool:
+
+    try:
+        datetime.strptime(val, "%d-%m-%Y")
+        return True
+    except:
+        return False
 
 
 class ProductController(ViewSet):
@@ -43,6 +50,7 @@ class ProductController(ViewSet):
         page = query_params.get("page") or 1
         limit = query_params.get("limit") or 10
         category = query_params.get("category")
+        date = query_params.get("date")
 
         if isParsable(page) is None or int(page) == 0:
             return Response(
@@ -54,9 +62,16 @@ class ProductController(ViewSet):
                 "Limit should be integer and greater than 0",
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        elif date is not None and not is_valid_date(date):
+            return Response(
+                "Provide date in dd-mm-yyyy format",
+                status = status.HTTP_400_BAD_REQUEST
+            )
+
+        date = date if date is None else datetime.strptime(date,"%d-%m-%Y")
         try:
             products = self.service.get_all(
-                page=int(page), limit=int(limit), category=category
+                page=int(page), limit=int(limit), category=category, date = date
             )
             serializer = ProductGetSerializer(products, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)

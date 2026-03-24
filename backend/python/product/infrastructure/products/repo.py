@@ -27,9 +27,9 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
         except Exception as e:
             raise ProductRepositoryError("Unable to fetch Product") from e
 
-    def get_all(self, start: int, end: int, category: str) -> List[Product]:
+    def get_all(self, start: int, end: int, category: str, date : datetime | None) -> List[Product]:
         try:
-            print(start, " ", end, " ", category)
+            print(start, " ", end, " ", category, " ", date)
             filters = {}
             if category is not None:
                 cat_obj = CategoryDocument.objects(title=category)[0]
@@ -38,7 +38,10 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
                     filters["category"] = cat_obj.id
                 else:
                     return []
+            if date is not None:
+                filters["created_at__gt"] = date
 
+            print(filters)
             documents = list(ProductDocument.objects(**filters)[start:end])
             products = []
             for doc in documents:

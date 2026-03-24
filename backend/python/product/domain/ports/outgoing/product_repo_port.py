@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import List
 
 from product.application.dto.products import ProductCreationData, ProductUpdateData
@@ -12,7 +13,7 @@ class ProductRepositoryPorts(ABC):
         pass
 
     @abstractmethod
-    def get_all(self, start: int, end: int, category: str) -> List[Product]:
+    def get_all(self, start: int, end: int, category: str, date : datetime | None) -> List[Product]:
         pass
 
     @abstractmethod
