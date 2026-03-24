@@ -1,5 +1,6 @@
 import csv
 import io
+from mongoengine import ValidationError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
@@ -8,7 +9,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from product.application.product_service import ProductService
 from product.domain.custom_exceptions import ProductRepositoryError
 from product.shared.dto.products.request import CreateProductRequest
-from .product_serializers import ProductGetSerializer
+from .product_serializers import ProductGetSerializer, ProductPostSerializer
 from .bulk_upload_serializers import (
     BulkProductUploadSerializer,
     BulkUploadResponseSerializer,
@@ -21,6 +22,9 @@ class BulkProductUploadController(ViewSet):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def validate_fields(self):
+        return True
 
     def create(self, request):
         serializer = BulkProductUploadSerializer(data=request.data)
@@ -59,20 +63,23 @@ class BulkProductUploadController(ViewSet):
                         )
                         continue
 
-                    product_request = CreateProductRequest(
-                        name=row["name"].strip(),
-                        description=row["description"].strip(),
-                        price=float(row["price"]),
-                        quantity=int(row["quantity"]),
-                        category=row["category"].strip(),
-                        brand=(
-                            row.get("brand", "").strip() if row.get("brand") else None
-                        ),
-                    )
+                    serialized_data = ProductPostSerializer(data = {**row})
+                    serialized_data.is_valid(raise_exception=True)
+
+                    product_request = CreateProductRequest(**serialized_data.data)
+                    print(product_request)
 
                     created_product = self.service.add(product_request)
                     created_products.append(ProductGetSerializer(created_product).data)
 
+                except ValidationError as e:
+                    errors.append(
+                        {
+                            "row" : row_num,
+                            "error" : f"Invalid args: {str(e)}",
+                            "data" : row
+                        }
+                    )
                 except ValueError as e:
                     errors.append(
                         {

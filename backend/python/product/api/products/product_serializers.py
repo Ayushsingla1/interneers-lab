@@ -19,7 +19,7 @@ class ProductPostSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True)
     brand = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     price = serializers.DecimalField(min_value=0, decimal_places=2, max_digits=10)
-    quantity = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=0)
     category = serializers.CharField()
 
 

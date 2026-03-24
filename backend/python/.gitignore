@@ -7,6 +7,5 @@ venv/
 *.log
 
 *.sqlite3
-.windsurf/
 random.csv
-
+.windsurf/

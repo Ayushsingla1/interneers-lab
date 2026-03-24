@@ -6,7 +6,7 @@ from typing import Optional
 class CreateProductRequest:
     name: str
     description: str
-    quantity: str
+    quantity: int
     price: float
     category: str
     brand: str
@@ -37,7 +37,7 @@ class UpdateProductRequest:
 
     name: Optional[str] = None
     description: Optional[str] = None
-    quantity: Optional[str] = None
+    quantity: Optional[int] = None
     price: Optional[float] = None
     category: Optional[str] = None
     brand: Optional[str] = None
