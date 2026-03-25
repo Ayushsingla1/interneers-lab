@@ -34,3 +34,7 @@ class CategoryRepositoryPorts(ABC):
     @abstractmethod
     def get_product(self, id: str, product_id: str) -> Product:
         pass
+
+    @abstractmethod
+    def get_by_name(self, name: str) -> str | None:
+        pass

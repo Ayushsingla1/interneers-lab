@@ -1,6 +1,4 @@
-from datetime import datetime
-from typing import List
-
+from product.domain.custom_exceptions import CategoryNotFoundError, ProductRepositoryError
 from product.application.dto.products import ProductCreationData, ProductUpdateData
 from product.application.mappers.product_mapper import (
     map_product_to_response,
@@ -8,17 +6,20 @@ from product.application.mappers.product_mapper import (
 )
 from product.domain.entities.product import Product
 from product.domain.ports.incoming import product_service_port
-from product.domain.ports.outgoing import product_repo_port
+from product.domain.ports.outgoing import product_repo_port, category_repo_port
 from product.shared.dto.products.request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
 from product.shared.dto.products.response import ProductResponse
+from datetime import datetime
+from typing import List
 
 
 class ProductService(product_service_port.ProductServicePorts):
-    def __init__(self, product_repository: product_repo_port.ProductRepositoryPorts):
+    def __init__(self, product_repository: product_repo_port.ProductRepositoryPorts, category_repository : category_repo_port.CategoryRepositoryPorts):
         self.product_repository = product_repository
+        self.category_repository = category_repository
 
     def get_all(self, page: int, limit: int, category: str, date: datetime | None) -> List[ProductResponse]:
         start = (page - 1) * limit
@@ -33,16 +34,22 @@ class ProductService(product_service_port.ProductServicePorts):
         return map_product_to_response(product)
 
     def add(self, item: CreateProductRequest) -> ProductResponse:
-        create_data = ProductCreationData(
-            name=item.name,
-            description=item.description,
-            price=item.price,
-            quantity=item.quantity,
-            brand=item.brand,
-            category=item.category,
-        )
-        product: Product = self.product_repository.add(create_data)
-        return map_product_to_response(product)
+        try:
+            category_id = self.category_repository.get_by_name(item.category)
+            create_data = ProductCreationData(
+                name=item.name,
+                description=item.description,
+                price=item.price,
+                quantity=item.quantity,
+                brand=item.brand,
+                category=category_id,
+            )
+            product: Product = self.product_repository.add(create_data)
+            return map_product_to_response(product)
+        except CategoryNotFoundError:
+            raise 
+        except Exception as e:
+            raise ProductRepositoryError("Unable to add product")
 
     def update(self, id: str, item: UpdateProductRequest):
         update_data = ProductUpdateData(

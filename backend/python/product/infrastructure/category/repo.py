@@ -6,7 +6,6 @@ from product.application.dto.category import CategoryCreationData, CategoryUpdat
 from product.domain.custom_exceptions import (
     CategoryNotFoundError,
     CategoryRepositoryError,
-    ProductNotFoundError,
 )
 from product.domain.entities.product import Product
 from product.domain.entities.category import Category
@@ -50,7 +49,7 @@ class CategoryRepository(category_repo_port.CategoryRepositoryPorts):
             deleted = CategoryDocument.objects(id=ObjectId(id)).delete()
             if deleted == 0:
                 raise CategoryNotFoundError(f"No category with id: {id}")
-        except ProductNotFoundError:
+        except CategoryNotFoundError:
             raise
         except Exception as e:
             raise CategoryRepositoryError("Unable to delete category") from e
@@ -63,7 +62,7 @@ class CategoryRepository(category_repo_port.CategoryRepositoryPorts):
             )
             if updated == 0:
                 raise CategoryNotFoundError(f"No category with id: {id}")
-        except ProductNotFoundError:
+        except CategoryNotFoundError:
             raise
         except Exception as e:
             raise CategoryRepositoryError("Unable to update category") from e
@@ -90,3 +89,13 @@ class CategoryRepository(category_repo_port.CategoryRepositoryPorts):
             raise CategoryNotFoundError("Unable to find category with such id")
         except Exception as e:
             raise CategoryRepositoryError("Database error") from e
+
+    def get_by_name(self, name: str) -> str:
+        try:
+            docs = CategoryDocument.objects.get(title = name)
+            return docs.id
+        except DoesNotExist:
+            raise CategoryNotFoundError("No category with such name")
+        except Exception as e:
+            raise CategoryRepositoryError("Database error") from e
+            

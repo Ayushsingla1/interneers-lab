@@ -6,11 +6,11 @@ from product.application.category_service import CategoryService
 from product.infrastructure.products.repo import ProductRepository
 from product.infrastructure.category.repo import CategoryRepository
 
-product_repository = ProductRepository()
-product_service = ProductService(product_repository)
-
 category_repository = CategoryRepository()
 category_service = CategoryService(category_repository)
+
+product_repository = ProductRepository()
+product_service = ProductService(product_repository, category_repository)
 
 product_list = ProductController.as_view(
     {"get": "list", "post": "create"}, service=product_service

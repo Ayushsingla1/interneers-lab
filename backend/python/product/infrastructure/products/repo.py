@@ -29,11 +29,9 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
 
     def get_all(self, start: int, end: int, category: str, date : datetime | None) -> List[Product]:
         try:
-            print(start, " ", end, " ", category, " ", date)
             filters = {}
             if category is not None:
                 cat_obj = CategoryDocument.objects(title=category)[0]
-                print(cat_obj)
                 if cat_obj:
                     filters["category"] = cat_obj.id
                 else:

@@ -35,5 +35,4 @@ class ProductDocument(Document):
 
     def clean(self):
         if not self.category or not CategoryDocument.objects(id=self.category.id):
-            print("error aaya")
             raise ValidationError("Category not found")
