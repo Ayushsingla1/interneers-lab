@@ -7,11 +7,10 @@ from mongoengine.fields import DateTimeField, ReferenceField
 
 
 class CategoryDocument(Document):
-    title = StringField(max_length=100)
+    title = StringField(max_length=100, unique = True)
     description = StringField(max_length=255)
 
     meta = {"indexes": ["title"]}
-
 
 class ProductDocument(Document):
     objects: ClassVar[QuerySet]
@@ -32,7 +31,3 @@ class ProductDocument(Document):
             "category",
         ],
     }
-
-    def clean(self):
-        if not self.category or not CategoryDocument.objects(id=self.category.id):
-            raise ValidationError("Category not found")

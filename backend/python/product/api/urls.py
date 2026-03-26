@@ -8,6 +8,7 @@ from product.composition_root import (
     category_products,
     category_product_detail,
     bulk_product_upload,
+    query_list
 )
 
 urlpatterns = [
@@ -22,4 +23,5 @@ urlpatterns = [
         category_product_detail,
         name="category-product-detail",
     ),
+    path("query/", query_list, name="query-list"),
 ]

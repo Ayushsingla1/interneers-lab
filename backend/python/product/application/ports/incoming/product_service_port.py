@@ -2,11 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List
 
-from product.shared.dto.products.request import (
-    CreateProductRequest,
-    UpdateProductRequest,
-)
-from product.shared.dto.products.response import ProductResponse
+from product.application.dto.products.inbound.request import CreateProductRequest, UpdateProductRequest
+from product.application.dto.products.inbound.response import ProductResponse
 
 
 class ProductServicePorts(ABC):

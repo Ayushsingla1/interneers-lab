@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from product.shared.dto.category.request import (
+from product.application.dto.category.inbound.request import (
     CreateCategoryRequest,
     UpdateCategoryRequest,
 )

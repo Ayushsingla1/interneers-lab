@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from ..category.category_serializers import CategorySerializer
-
 
 class ProductGetSerializer(serializers.Serializer):
     id = serializers.CharField()

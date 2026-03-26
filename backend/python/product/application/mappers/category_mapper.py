@@ -1,6 +1,6 @@
 from typing import List
 from product.domain.entities.category import Category
-from product.shared.dto.category.response import CategoryResponse
+from product.application.dto.category.inbound.response import CategoryResponse
 
 
 def map_category_to_response(category: Category) -> CategoryResponse:

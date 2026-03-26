@@ -5,12 +5,19 @@ from product.application.product_service import ProductService
 from product.application.category_service import CategoryService
 from product.infrastructure.products.repo import ProductRepository
 from product.infrastructure.category.repo import CategoryRepository
+from product.api.query.query_views import QueryController
+from product.infrastructure.query.repo import QueryRepository
+from product.application.query_service import QueryService
+from product.infrastructure.query.setup import client, encoder
 
 category_repository = CategoryRepository()
 category_service = CategoryService(category_repository)
 
 product_repository = ProductRepository()
 product_service = ProductService(product_repository, category_repository)
+
+query_repository = QueryRepository(client, encoder)
+query_service = QueryService(query_repository, product_repository)
 
 product_list = ProductController.as_view(
     {"get": "list", "post": "create"}, service=product_service
@@ -38,4 +45,8 @@ category_product_detail = CategoryController.as_view(
 
 bulk_product_upload = BulkProductUploadController.as_view(
     {"post": "create"}, service=product_service
+)
+
+query_list = QueryController.as_view(
+    {"get" : "list"}, service = query_service
 )

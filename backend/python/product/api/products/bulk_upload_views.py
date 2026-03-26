@@ -8,7 +8,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 from product.application.product_service import ProductService
 from product.domain.custom_exceptions import ProductRepositoryError
-from product.shared.dto.products.request import CreateProductRequest
+from product.application.dto.products.inbound.request import CreateProductRequest
 from .product_serializers import ProductGetSerializer, ProductPostSerializer
 from .bulk_upload_serializers import (
     BulkProductUploadSerializer,

@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from product.shared.dto.category.request import (
+from product.application.dto.category.inbound.request import (
     CreateCategoryRequest,
     UpdateCategoryRequest,
 )
-from product.shared.dto.category.response import CategoryResponse
-from product.shared.dto.products.response import ProductResponse
+from product.application.dto.category.inbound.response import CategoryResponse
+from product.application.dto.products.inbound.response import ProductResponse
 
 
 class CategoryServicePorts(ABC):

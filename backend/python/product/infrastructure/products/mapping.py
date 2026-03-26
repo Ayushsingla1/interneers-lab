@@ -1,4 +1,4 @@
-from product.application.dto.products import ProductCreationData
+from product.application.dto.products.outbound.request import ProductCreationData
 from product.domain.entities.product import Product
 from ..models import ProductDocument
 
@@ -18,7 +18,6 @@ def _to_entity_product(product: ProductDocument) -> Product:
         )
 
     except Exception as e:
-        print(e)
         raise ValueError("unable to parse") from e
 
 

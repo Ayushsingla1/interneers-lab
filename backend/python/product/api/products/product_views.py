@@ -9,7 +9,7 @@ from product.domain.custom_exceptions import (
     ProductNotFoundError,
     ProductRepositoryError,
 )
-from product.shared.dto.products.request import (
+from product.application.dto.products.inbound.request import (
     CreateProductRequest,
     UpdateProductRequest,
 )

@@ -1,17 +1,17 @@
 from product.domain.custom_exceptions import CategoryNotFoundError, ProductRepositoryError
-from product.application.dto.products import ProductCreationData, ProductUpdateData
+from product.application.dto.products.outbound.request import ProductCreationData, ProductUpdateData
 from product.application.mappers.product_mapper import (
     map_product_to_response,
     map_products_to_responses,
 )
 from product.domain.entities.product import Product
-from product.domain.ports.incoming import product_service_port
-from product.domain.ports.outgoing import product_repo_port, category_repo_port
-from product.shared.dto.products.request import (
+from product.application.ports.incoming import product_service_port
+from product.application.ports.outgoing import product_repo_port, category_repo_port
+from product.application.dto.products.inbound.request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
-from product.shared.dto.products.response import ProductResponse
+from product.application.dto.products.inbound.response import ProductResponse
 from datetime import datetime
 from typing import List
 
@@ -24,6 +24,14 @@ class ProductService(product_service_port.ProductServicePorts):
     def get_all(self, page: int, limit: int, category: str, date: datetime | None) -> List[ProductResponse]:
         start = (page - 1) * limit
         end = start + limit
+
+        if category is not None:
+            try:
+                category_details = self.category_repository.get_by_id(category)
+                category = category_details.id
+            except CategoryNotFoundError:
+                raise
+
         products = self.product_repository.get_all(
             start=start, end=end, category=category, date = date
         )
@@ -52,6 +60,11 @@ class ProductService(product_service_port.ProductServicePorts):
             raise ProductRepositoryError("Unable to add product")
 
     def update(self, id: str, item: UpdateProductRequest):
+
+        if item.category is not None:
+            category_details = self.category_repository.get_by_name(item.category)
+            item.category = category_details.id
+
         update_data = ProductUpdateData(
             name=item.name,
             description=item.description,

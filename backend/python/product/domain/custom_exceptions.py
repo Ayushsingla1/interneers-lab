@@ -12,3 +12,15 @@ class CategoryRepositoryError(Exception):
 
 class CategoryNotFoundError(CategoryRepositoryError):
     pass
+
+
+class ProductNotUniqueError(ProductRepositoryError):
+    pass
+
+
+class InvalidIdError(ProductRepositoryError, CategoryRepositoryError):
+    pass
+
+
+class CategoryNotUniqueError(CategoryRepositoryError):
+    pass

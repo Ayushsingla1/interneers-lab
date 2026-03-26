@@ -1,6 +1,6 @@
 from typing import List
 from product.domain.entities.product import Product
-from product.shared.dto.products.response import ProductResponse
+from product.application.dto.products.inbound.response import ProductResponse
 
 
 def map_product_to_response(product: Product) -> ProductResponse:
