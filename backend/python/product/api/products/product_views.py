@@ -6,7 +6,9 @@ from datetime import datetime
 
 from product.application.product_service import ProductService
 from product.domain.custom_exceptions import (
+    CategoryNotFoundError,
     ProductNotFoundError,
+    ProductNotUniqueError,
     ProductRepositoryError,
 )
 from product.application.dto.products.inbound.request import (
@@ -29,6 +31,7 @@ def isParsable(val) -> int | None:
         return val
     except Exception:
         return None
+
 
 def is_valid_date(val) -> bool:
 
@@ -64,19 +67,18 @@ class ProductController(ViewSet):
             )
         elif date is not None and not is_valid_date(date):
             return Response(
-                "Provide date in dd-mm-yyyy format",
-                status = status.HTTP_400_BAD_REQUEST
+                "Provide date in dd-mm-yyyy format", status=status.HTTP_400_BAD_REQUEST
             )
 
-        date = date if date is None else datetime.strptime(date,"%d-%m-%Y")
+        date = date if date is None else datetime.strptime(date, "%d-%m-%Y")
         try:
             products = self.service.get_all(
-                page=int(page), limit=int(limit), category=category, date = date
+                page=int(page), limit=int(limit), category=category, date=date
             )
             serializer = ProductGetSerializer(products, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except ProductRepositoryError:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ProductRepositoryError as e:
+            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def create(self, request):
         data = ProductPostSerializer(data=request.data)
@@ -92,6 +94,10 @@ class ProductController(ViewSet):
             return Response(
                 data="unable to validate data", status=status.HTTP_400_BAD_REQUEST
             )
+        except ProductNotUniqueError as e:
+            return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
+        except CategoryNotFoundError as e:
+            return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
         except ProductRepositoryError:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -99,20 +105,20 @@ class ProductController(ViewSet):
         try:
             self.service.delete(id=pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except ProductNotFoundError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except ProductRepositoryError:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ProductNotFoundError as e:
+            return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
+        except ProductRepositoryError as e:
+            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk):
         try:
             product = self.service.get_by_id(id=pk)
             serializer = ProductGetSerializer(product)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        except ProductNotFoundError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except ProductRepositoryError:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ProductNotFoundError as e:
+            return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
+        except ProductRepositoryError as e:
+            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put(self, request, pk):
         data = ProductUpdateSerializer(data=request.data)
@@ -130,5 +136,11 @@ class ProductController(ViewSet):
             return Response(
                 data="Data validation failed", status=status.HTTP_400_BAD_REQUEST
             )
+        except ProductNotFoundError as e:
+            return Response(data=str(e), status=status.HTTP_204_NO_CONTENT)
+        except ProductNotUniqueError as e:
+            return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
+        except ProductRepositoryError as e:
+            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List
-from product.application.dto.category.outbound.request import CategoryCreationData, CategoryUpdateData
+from product.application.dto.category.outbound.request import (
+    CategoryCreationData,
+    CategoryUpdateData,
+)
 
 from product.domain.entities.product import Product
 from product.domain.entities.category import Category

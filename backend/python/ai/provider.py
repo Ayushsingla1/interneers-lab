@@ -3,7 +3,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-model = ChatGoogleGenerativeAI(model = "gemini-2.5-flash")
+model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 # response = model.invoke("Generate 5 product names for a toy store")
 

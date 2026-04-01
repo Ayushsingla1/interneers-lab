@@ -2,15 +2,15 @@ from datetime import UTC, datetime
 from typing import ClassVar
 
 from mongoengine import NULLIFY, DecimalField, Document, IntField, QuerySet, StringField
-from mongoengine.base.document import ValidationError
 from mongoengine.fields import DateTimeField, ReferenceField
 
 
 class CategoryDocument(Document):
-    title = StringField(max_length=100, unique = True)
+    title = StringField(max_length=100, unique=True)
     description = StringField(max_length=255)
 
     meta = {"indexes": ["title"]}
+
 
 class ProductDocument(Document):
     objects: ClassVar[QuerySet]

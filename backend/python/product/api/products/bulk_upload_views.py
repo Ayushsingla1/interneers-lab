@@ -63,11 +63,10 @@ class BulkProductUploadController(ViewSet):
                         )
                         continue
 
-                    serialized_data = ProductPostSerializer(data = {**row})
+                    serialized_data = ProductPostSerializer(data={**row})
                     serialized_data.is_valid(raise_exception=True)
 
                     product_request = CreateProductRequest(**serialized_data.data)
-                    print(product_request)
 
                     created_product = self.service.add(product_request)
                     created_products.append(ProductGetSerializer(created_product).data)
@@ -75,9 +74,9 @@ class BulkProductUploadController(ViewSet):
                 except ValidationError as e:
                     errors.append(
                         {
-                            "row" : row_num,
-                            "error" : f"Invalid args: {str(e)}",
-                            "data" : row
+                            "row": row_num,
+                            "error": f"Invalid args: {str(e)}",
+                            "data": row,
                         }
                     )
                 except ValueError as e:

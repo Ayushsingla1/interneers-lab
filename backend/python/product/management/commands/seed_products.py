@@ -302,9 +302,7 @@ class Command(BaseCommand):
                     )
                 else:
                     self.stdout.write(
-                        self.style.WARNING(
-                            f"Updated product: {product_data['name']}"
-                        )
+                        self.style.WARNING(f"Updated product: {product_data['name']}")
                     )
 
             except Exception as e:

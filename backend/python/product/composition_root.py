@@ -47,6 +47,4 @@ bulk_product_upload = BulkProductUploadController.as_view(
     {"post": "create"}, service=product_service
 )
 
-query_list = QueryController.as_view(
-    {"get" : "list"}, service = query_service
-)
+query_list = QueryController.as_view({"get": "list"}, service=query_service)

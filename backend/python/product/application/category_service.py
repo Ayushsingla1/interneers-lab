@@ -1,12 +1,15 @@
 from typing import List
 
-from product.application.dto.category.inbound.request  import (
+from product.application.dto.category.inbound.request import (
     CreateCategoryRequest,
     UpdateCategoryRequest,
 )
-from product.application.dto.category.inbound.response  import CategoryResponse
+from product.application.dto.category.inbound.response import CategoryResponse
 from product.application.dto.products.inbound.response import ProductResponse
-from product.application.dto.category.outbound.request import CategoryCreationData, CategoryUpdateData
+from product.application.dto.category.outbound.request import (
+    CategoryCreationData,
+    CategoryUpdateData,
+)
 from product.application.ports.incoming import category_service_port
 from product.application.ports.outgoing import category_repo_port
 from product.application.mappers.category_mapper import (

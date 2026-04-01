@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 from product.domain.entities.product import Product
 
+
 class QueryRepositoryPorts(ABC):
 
     @abstractmethod

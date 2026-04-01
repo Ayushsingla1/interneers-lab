@@ -4,11 +4,10 @@ from langchain_core.messages import HumanMessage
 from provider import model
 from tools import get_products, generate_products
 
-
 agent = create_agent(
-    model = model,
-    tools = [get_products, generate_products],
-    system_prompt="You are a helpful assistant and should only focus on products"
+    model=model,
+    tools=[get_products, generate_products],
+    system_prompt="You are a helpful assistant and should only focus on products",
 )
 
 
@@ -19,7 +18,11 @@ agent = create_agent(
 # })
 
 for chunk in agent.stream(
-    {"messages": [{"role": "user", "content": "find the products added after 20th march 2026"}]},
+    {
+        "messages": [
+            {"role": "user", "content": "find the products added after 20th march 2026"}
+        ]
+    },
     stream_mode="updates",
     version="v2",
 ):

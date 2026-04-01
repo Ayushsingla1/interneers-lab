@@ -5,24 +5,25 @@ from urllib.parse import quote
 from pydantic import BaseModel, Field
 from pprint import pprint
 
+
 class GetProductsInput(BaseModel):
 
-    category : str | None = Field(
-        default = None,
-        description = "Used to specify the category of products required"
+    category: str | None = Field(
+        default=None, description="Used to specify the category of products required"
     )
 
-    date : str | None = Field(
-        default = None,
-        description = """Used to fetch products added after a specified date. Should be in dd-mm-yyyy format. Month should be indexed
-        from 1 starting from january"""
+    date: str | None = Field(
+        default=None,
+        description="""Used to fetch products added after a specified date. Should be in dd-mm-yyyy format. Month should be indexed
+        from 1 starting from january""",
     )
+
 
 BACKEND_URL = "http://localhost:8000/products/"
 
-@tool(args_schema=GetProductsInput)
-def get_products(category : str | None, date: None | str):
 
+@tool(args_schema=GetProductsInput)
+def get_products(category: str | None, date: None | str):
     """Allow to fetch products from database. It also supports filter like category and date."""
 
     print(category, " ", date)
@@ -30,7 +31,7 @@ def get_products(category : str | None, date: None | str):
     if category is not None and category.strip() != "":
         url += f"?category={quote(category.strip())}&"
     if date is not None and date.strip() != "":
-        if url[-1] == '/':
+        if url[-1] == "/":
             url += f"?date={date.strip()}"
         else:
             url += f"date={date.strip()}"
@@ -45,8 +46,9 @@ def get_products(category : str | None, date: None | str):
     else:
         return "Unable to fetch products"
 
+
 @tool
-def generate_products(scenario : str, count : int):
+def generate_products(scenario: str, count: int):
     """This tool is used to generate a list of products, provided the event and count of products required"""
 
     prompt = f"""Suppose you are a store manager and supposed to fill your inventory based on the following scenario : {scenario} .Generate data about 
