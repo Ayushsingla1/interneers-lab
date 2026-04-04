@@ -55,8 +55,8 @@ def handle_db_errors(operation: str):
 class CategoryRepository(category_repo_port.CategoryRepositoryPorts):
 
     @handle_db_errors("fetching")
-    def get_all(self, start: int, end: int) -> List[Category]:
-        documents = list(CategoryDocument.objects[start:end])
+    def get_all(self) -> List[Category]:
+        documents = list(CategoryDocument.objects)
         products = []
         for doc in documents:
             products.append(_to_entity_category(doc))

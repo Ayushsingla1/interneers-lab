@@ -13,19 +13,11 @@ from product.domain.custom_exceptions import (
     CategoryNotUniqueError,
     CategoryRepositoryError,
 )
-from .category_serializers import CategorySerializer, CategoryUpdateSerializer
-
-
-def isParsable(val) -> int | None:
-
-    if isinstance(val, int):
-        return val
-
-    try:
-        val = int(val)
-        return val
-    except Exception:
-        return None
+from .category_serializers import (
+    CategorySerializer,
+    CategoryUpdateSerializer,
+    CategoryGetProductsQuerySerializer,
+)
 
 
 class CategoryController(ViewSet):
@@ -35,26 +27,18 @@ class CategoryController(ViewSet):
         super().__init__(**kwargs)
 
     def list(self, request):
-        query_params = request.query_params
-        page = query_params.get("page") or 1
-        limit = query_params.get("limit") or 10
-
-        if isParsable(page) is None or int(page) == 0:
-            return Response(
-                "Page should be integer and greater than 0",
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        elif isParsable(limit) is None or int(limit) == 0:
-            return Response(
-                "Limit should be integer and greater than 0",
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         try:
-            categories = self.service.get_all(page=int(page), limit=int(limit))
+            categories = self.service.get_all()
             serializer = CategorySerializer(categories, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(data={"data": serializer.data}, status=status.HTTP_200_OK)
         except CategoryRepositoryError as e:
-            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def create(self, request):
         data = CategorySerializer(data=request.data)
@@ -73,28 +57,44 @@ class CategoryController(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         except CategoryNotUniqueError as e:
-            return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except CategoryRepositoryError as e:
-            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def destroy(self, request, pk):
         try:
             self.service.delete(id=pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
         except CategoryNotFoundError as e:
-            return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
+            return Response(data={"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError as e:
-            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def retrieve(self, request, pk):
         try:
             category = self.service.get_by_id(id=pk)
             serializer = CategorySerializer(category)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(data={"data": serializer.data}, status=status.HTTP_200_OK)
         except CategoryNotFoundError as e:
             return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError as e:
             return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def put(self, request, pk):
         data = CategoryUpdateSerializer(data=request.data)
@@ -112,27 +112,27 @@ class CategoryController(ViewSet):
                 data="Data validation failed", status=status.HTTP_400_BAD_REQUEST
             )
         except CategoryNotFoundError as e:
-            return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
+            return Response(data={"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except CategoryNotUniqueError as e:
-            return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
+            return Response(data={"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError as e:
-            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def get_products(self, request, pk):
-
         query_params = request.query_params
-        cursor = query_params.get("cursor")
-        limit = query_params.get("limit") or 10
-
-        if not isParsable(limit) or int(limit) == 0:
-            return Response(
-                data="Limit should be integer and greater than 0",
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serialized_data = CategoryGetProductsQuerySerializer(data=query_params)
         try:
-            products = self.service.get_all_products(
-                id=pk, cursor=cursor, limit=int(limit)
-            )
+            serialized_data.is_valid(raise_exception=True)
+            validated_params = serialized_data.validated_data
+            cursor = validated_params.get("cursor")
+            limit = validated_params.get("limit")
+            products = self.service.get_all_products(id=pk, cursor=cursor, limit=limit)
             serializer = ProductGetSerializer(products.products, many=True)
             return Response(
                 {
@@ -143,9 +143,15 @@ class CategoryController(ViewSet):
                 status=status.HTTP_200_OK,
             )
         except CategoryNotFoundError as e:
-            return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
-        except CategoryRepositoryError as e:
-            return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(data={"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except (ValidationError, CategoryRepositoryError) as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def get_product(self, request, pk, product_id):
         try:
@@ -156,3 +162,7 @@ class CategoryController(ViewSet):
             return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError as e:
             return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response(
+                data={"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -26,5 +26,5 @@ class CategoryNotUniqueError(CategoryRepositoryError):
     pass
 
 
-class InvalidToken(Exception):
+class InvalidCursorError(Exception):
     pass

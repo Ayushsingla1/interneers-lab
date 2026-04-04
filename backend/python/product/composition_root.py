@@ -8,13 +8,19 @@ from product.infrastructure.category.repo import CategoryRepository
 from product.api.query.query_views import QueryController
 from product.infrastructure.query.repo import QueryRepository
 from product.application.query_service import QueryService
+from product.infrastructure.cursor_service import CursorPagination
 from product.infrastructure.query.setup import client, encoder
 
 category_repository = CategoryRepository()
 product_repository = ProductRepository()
+cursor_repository = CursorPagination()
 
-category_service = CategoryService(category_repository, product_repository)
-product_service = ProductService(product_repository, category_repository)
+category_service = CategoryService(
+    category_repository, product_repository, cursor_repository
+)
+product_service = ProductService(
+    product_repository, category_repository, cursor_repository
+)
 
 query_repository = QueryRepository(client, encoder)
 query_service = QueryService(query_repository, product_repository)

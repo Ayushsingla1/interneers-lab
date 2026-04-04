@@ -11,7 +11,7 @@ from product.application.dto.products.inbound.response import ProductResponse
 
 class CategoryServicePorts(ABC):
     @abstractmethod
-    def get_all(self, page: int, limit: int) -> List[CategoryResponse]:
+    def get_all(self) -> List[CategoryResponse]:
         pass
 
     @abstractmethod

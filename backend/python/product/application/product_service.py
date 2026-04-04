@@ -1,17 +1,7 @@
+import json
 from base64 import b64decode, urlsafe_b64encode
-from product.application.dto.products.outbound.response import ProductsRepoResponse
-from product.domain.custom_exceptions import InvalidToken
-from product.application.dto.products.outbound.request import (
-    ProductCreationData,
-    ProductUpdateData,
-)
-from product.application.mappers.product_mapper import (
-    map_product_to_response,
-    map_products_to_responses,
-)
-from product.domain.entities.product import Product
-from product.application.ports.incoming import product_service_port
-from product.application.ports.outgoing import product_repo_port, category_repo_port
+from datetime import datetime
+
 from product.application.dto.products.inbound.request import (
     CreateProductRequest,
     UpdateProductRequest,
@@ -20,33 +10,50 @@ from product.application.dto.products.inbound.response import (
     ProductResponse,
     ProductsResponse,
 )
-from datetime import datetime
-import json
+from product.application.dto.products.outbound.request import (
+    ProductCreationData,
+    ProductUpdateData,
+)
+from product.application.dto.products.outbound.response import ProductsRepoResponse
+from product.application.mappers.product_mapper import (
+    map_product_to_response,
+    map_products_to_responses,
+)
+from product.application.ports.incoming import product_service_port
+from product.application.ports.outgoing.category_repo_port import (
+    CategoryRepositoryPorts,
+)
+from product.application.ports.outgoing.product_repo_port import ProductRepositoryPorts
+from .ports.outgoing.cursor_ports import CursorPaginationPorts
+from product.domain.custom_exceptions import InvalidIdError
+from product.domain.entities.product import Product
 
 
 class ProductService(product_service_port.ProductServicePorts):
     def __init__(
         self,
-        product_repository: product_repo_port.ProductRepositoryPorts,
-        category_repository: category_repo_port.CategoryRepositoryPorts,
+        product_repository: ProductRepositoryPorts,
+        category_repository: CategoryRepositoryPorts,
+        cursor_repository: CursorPaginationPorts,
     ):
         self.product_repository = product_repository
         self.category_repository = category_repository
+        self.cursor_repository = cursor_repository
 
     def get_all(
-        self, cursor: str, limit: int, category: str, created_after: datetime | None
+        self,
+        limit: int,
+        cursor: str | None,
+        category: str | None,
+        created_after: datetime | None,
     ) -> ProductsRepoResponse:
 
         id = None
         date = None
         if cursor is not None:
-            required_keys = ["created_at", "id"]
-            decoded_token = json.loads(b64decode(cursor).decode("utf-8"))
-            if all(key in decoded_token for key in required_keys):
-                id = decoded_token["id"]
-                date = datetime.fromisoformat(decoded_token["created_at"])
-            else:
-                raise InvalidToken("Token sent is invalid")
+            decoded_cursor = self.cursor_repository.decode(cursor)
+            id = decoded_cursor.id
+            date = decoded_cursor.created_at
 
         if category is not None:
             category = self.category_repository.get_by_name(category)
@@ -63,15 +70,10 @@ class ProductService(product_service_port.ProductServicePorts):
         next_cursor = None
 
         if repo_response.has_more:
-            new_token_json = json.dumps(
-                {
-                    "created_at": products[-1].created_at.isoformat(),
-                    "id": products[-1].id,
-                }
-            )
-
-            next_cursor = urlsafe_b64encode(new_token_json.encode("utf-8")).decode(
-                "utf-8"
+            last_id = repo_response.products[-1].id
+            last_created_at = repo_response.products[-1].created_at
+            next_cursor = self.cursor_repository.encode(
+                id=last_id, created_at=last_created_at
             )
 
         return ProductsResponse(

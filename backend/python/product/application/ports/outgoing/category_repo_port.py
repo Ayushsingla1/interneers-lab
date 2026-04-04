@@ -12,7 +12,7 @@ from product.domain.entities.category import Category
 
 class CategoryRepositoryPorts(ABC):
     @abstractmethod
-    def get_all(self, page: int, limit: int) -> List[Category]:
+    def get_all(self) -> List[Category]:
         pass
 
     @abstractmethod

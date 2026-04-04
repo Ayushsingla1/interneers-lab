@@ -1,5 +1,5 @@
 from product_rag.domain.custom_exceptions import InvalidChatHistory
-from product_rag.domain.entities.chat import ROLE, Chat, ChatHistory
+from product_rag.domain.entities.chat import ROLE, Chat
 from .ports.inbound.rag_service_ports import RAGServicePorts
 from .ports.outbound.rag_repo_ports import RAGRepoPorts
 import tempfile
