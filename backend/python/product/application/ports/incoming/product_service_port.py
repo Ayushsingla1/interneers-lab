@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List
-
 from product.application.dto.products.inbound.request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
-from product.application.dto.products.inbound.response import ProductResponse
+from product.application.dto.products.inbound.response import (
+    ProductResponse,
+    ProductsResponse,
+)
 
 
 class ProductServicePorts(ABC):
@@ -16,8 +17,12 @@ class ProductServicePorts(ABC):
 
     @abstractmethod
     def get_all(
-        self, page: int, limit: int, category: str, date: datetime | None
-    ) -> List[ProductResponse]:
+        self,
+        cursor: str,
+        limit: int,
+        category: str | None,
+        created_after: datetime | None,
+    ) -> ProductsResponse:
         pass
 
     @abstractmethod

@@ -1,6 +1,5 @@
 from typing import List
 from mongoengine import DoesNotExist, ConnectionFailure, NotUniqueError, OperationError
-from mongoengine.base.fields import ObjectId
 
 from product.application.dto.category.outbound.request import (
     CategoryCreationData,
@@ -89,15 +88,6 @@ class CategoryRepository(category_repo_port.CategoryRepositoryPorts):
         updated = CategoryDocument.objects(id=oid).update_one(**update_items)
         if updated == 0:
             raise CategoryNotFoundError(f"No category with id: {id}")
-
-    @handle_db_errors("fetching")
-    def get_all_products(self, id: str) -> List[Product]:
-        oid = _validate_object_id(id, "CategoryId")
-        docs = list(ProductDocument.objects(category=oid))
-        products = []
-        for doc in docs:
-            products.append(_to_entity_product(doc))
-        return products
 
     @handle_db_errors("fetching")
     def get_product(self, id: str, product_id: str) -> Product:

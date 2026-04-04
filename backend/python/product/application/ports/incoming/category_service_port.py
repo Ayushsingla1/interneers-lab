@@ -31,7 +31,9 @@ class CategoryServicePorts(ABC):
         pass
 
     @abstractmethod
-    def get_all_products(self, id: str) -> List[ProductResponse]:
+    def get_all_products(
+        self, id: str, cursor: str | None, limit: int = 10
+    ) -> List[ProductResponse]:
         pass
 
     @abstractmethod

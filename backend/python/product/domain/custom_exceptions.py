@@ -24,3 +24,7 @@ class InvalidIdError(ProductRepositoryError, CategoryRepositoryError):
 
 class CategoryNotUniqueError(CategoryRepositoryError):
     pass
+
+
+class InvalidToken(Exception):
+    pass

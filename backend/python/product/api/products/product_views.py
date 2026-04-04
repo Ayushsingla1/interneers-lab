@@ -2,11 +2,11 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from datetime import datetime
-
 from product.application.product_service import ProductService
+from datetime import datetime
 from product.domain.custom_exceptions import (
     CategoryNotFoundError,
+    InvalidToken,
     ProductNotFoundError,
     ProductNotUniqueError,
     ProductRepositoryError,
@@ -23,18 +23,17 @@ from .product_serializers import (
 )
 
 
-def isParsable(val) -> int | None:
+def isParsable(val) -> bool:
     if isinstance(val, int):
         return val
     try:
         val = int(val)
-        return val
+        return True
     except Exception:
-        return None
+        return False
 
 
 def is_valid_date(val) -> bool:
-
     try:
         datetime.strptime(val, "%d-%m-%Y")
         return True
@@ -50,33 +49,44 @@ class ProductController(ViewSet):
 
     def list(self, request):
         query_params = request.query_params
-        page = query_params.get("page") or 1
-        limit = query_params.get("limit") or 10
         category = query_params.get("category")
-        date = query_params.get("date")
+        cursor = query_params.get("cursor")
+        limit = query_params.get("limit") or 10
+        created_after = query_params.get("after")
 
-        if isParsable(page) is None or int(page) == 0:
+        if not isParsable(limit) or int(limit) == 0:
             return Response(
-                "Page should be integer and greater than 0",
+                data="Limit should be integer and greater than 0",
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        elif isParsable(limit) is None or int(limit) == 0:
+        if created_after is not None and not is_valid_date(created_after):
             return Response(
-                "Limit should be integer and greater than 0",
+                data="Provide date in dd-mm-yyyy format",
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        elif date is not None and not is_valid_date(date):
-            return Response(
-                "Provide date in dd-mm-yyyy format", status=status.HTTP_400_BAD_REQUEST
-            )
-
-        date = date if date is None else datetime.strptime(date, "%d-%m-%Y")
         try:
-            products = self.service.get_all(
-                page=int(page), limit=int(limit), category=category, date=date
+            created_after = (
+                datetime.strptime(created_after, "%d-%m-%Y")
+                if created_after is not None
+                else None
             )
-            serializer = ProductGetSerializer(products, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            products = self.service.get_all(
+                cursor=cursor,
+                limit=int(limit),
+                category=category,
+                created_after=created_after,
+            )
+            serializer = ProductGetSerializer(products.products, many=True)
+            return Response(
+                data={
+                    "next_cursor": products.next_cursor,
+                    "data": serializer.data,
+                    "has_more": products.has_more,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except InvalidToken as e:
+            return Response(data=str(e), status=status.HTTP_400_BAD_REQUEST)
         except ProductRepositoryError as e:
             return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

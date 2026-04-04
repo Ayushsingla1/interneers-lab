@@ -1,4 +1,5 @@
 from product_rag.domain.custom_exceptions import InvalidChatHistory
+from product_rag.domain.entities.chat import ROLE, Chat, ChatHistory
 from .ports.inbound.rag_service_ports import RAGServicePorts
 from .ports.outbound.rag_repo_ports import RAGRepoPorts
 import tempfile
@@ -30,5 +31,8 @@ class RAGService(RAGServicePorts):
         chunks = self.repository.retrieve_relevant_chunks(
             query=prompt[len(prompt) - 1]["text"]
         )
-        llm_response = self.repository.get_llm_response(prompt, chunks)
+        chat_history = list(
+            map(lambda x: Chat(text=x["text"], role=ROLE(x["role"])), prompt)
+        )
+        llm_response = self.repository.get_llm_response(chat_history, chunks)
         return llm_response

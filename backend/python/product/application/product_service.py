@@ -1,7 +1,6 @@
-from product.domain.custom_exceptions import (
-    CategoryNotFoundError,
-    ProductRepositoryError,
-)
+from base64 import b64decode, urlsafe_b64encode
+from product.application.dto.products.outbound.response import ProductsRepoResponse
+from product.domain.custom_exceptions import InvalidToken
 from product.application.dto.products.outbound.request import (
     ProductCreationData,
     ProductUpdateData,
@@ -17,9 +16,12 @@ from product.application.dto.products.inbound.request import (
     CreateProductRequest,
     UpdateProductRequest,
 )
-from product.application.dto.products.inbound.response import ProductResponse
+from product.application.dto.products.inbound.response import (
+    ProductResponse,
+    ProductsResponse,
+)
 from datetime import datetime
-from typing import List
+import json
 
 
 class ProductService(product_service_port.ProductServicePorts):
@@ -32,18 +34,51 @@ class ProductService(product_service_port.ProductServicePorts):
         self.category_repository = category_repository
 
     def get_all(
-        self, page: int, limit: int, category: str, date: datetime | None
-    ) -> List[ProductResponse]:
-        start = (page - 1) * limit
-        end = start + limit
+        self, cursor: str, limit: int, category: str, created_after: datetime | None
+    ) -> ProductsRepoResponse:
+
+        id = None
+        date = None
+        if cursor is not None:
+            required_keys = ["created_at", "id"]
+            decoded_token = json.loads(b64decode(cursor).decode("utf-8"))
+            if all(key in decoded_token for key in required_keys):
+                id = decoded_token["id"]
+                date = datetime.fromisoformat(decoded_token["created_at"])
+            else:
+                raise InvalidToken("Token sent is invalid")
 
         if category is not None:
             category = self.category_repository.get_by_name(category)
 
-        products = self.product_repository.get_all(
-            start=start, end=end, category=category, date=date
+        repo_response = self.product_repository.get_all(
+            id=id,
+            limit=limit,
+            category=category,
+            date=date,
+            created_after=created_after,
         )
-        return map_products_to_responses(products)
+        products = repo_response.products
+
+        next_cursor = None
+
+        if repo_response.has_more:
+            new_token_json = json.dumps(
+                {
+                    "created_at": products[-1].created_at.isoformat(),
+                    "id": products[-1].id,
+                }
+            )
+
+            next_cursor = urlsafe_b64encode(new_token_json.encode("utf-8")).decode(
+                "utf-8"
+            )
+
+        return ProductsResponse(
+            products=map_products_to_responses(products),
+            next_cursor=next_cursor,
+            has_more=repo_response.has_more,
+        )
 
     def get_by_id(self, id: str) -> ProductResponse:
         product: Product = self.product_repository.get_by_id(id)

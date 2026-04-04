@@ -1,4 +1,3 @@
-from product.domain.custom_exceptions import ProductRepositoryError
 from product.application.ports.outgoing.product_repo_port import ProductRepositoryPorts
 from product.application.ports.incoming.query_service_port import QueryServicePorts
 from product.application.ports.outgoing.query_repo_port import QueryRepositoryPorts
@@ -27,5 +26,5 @@ class QueryService(QueryServicePorts):
         return map_products_to_responses(products)
 
     def add(self):
-        products = self.product_repository.get_all(0, 100, None, None)
-        self.query_repository.add(products)
+        products = self.product_repository.get_all(None, 100, None, None, None)
+        self.query_repository.add(products.products)

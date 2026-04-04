@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+from product_rag.domain.entities.chat import ChatHistory
+
 
 class RAGRepoPorts(ABC):
     @abstractmethod
@@ -20,5 +22,5 @@ class RAGRepoPorts(ABC):
         pass
 
     @abstractmethod
-    def get_llm_response(self, query: str, chunks: List[str]) -> str:
+    def get_llm_response(self, chat_history: ChatHistory, chunks: List[str]) -> str:
         pass

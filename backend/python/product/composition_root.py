@@ -11,9 +11,9 @@ from product.application.query_service import QueryService
 from product.infrastructure.query.setup import client, encoder
 
 category_repository = CategoryRepository()
-category_service = CategoryService(category_repository)
-
 product_repository = ProductRepository()
+
+category_service = CategoryService(category_repository, product_repository)
 product_service = ProductService(product_repository, category_repository)
 
 query_repository = QueryRepository(client, encoder)

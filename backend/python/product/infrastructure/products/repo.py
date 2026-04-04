@@ -2,11 +2,13 @@ from datetime import UTC, datetime
 from typing import List
 import functools
 from mongoengine import DoesNotExist, NotUniqueError, OperationError, ConnectionFailure
+from mongoengine import Q
 
 from product.application.dto.products.outbound.request import (
     ProductCreationData,
     ProductUpdateData,
 )
+from product.application.dto.products.outbound.response import ProductsRepoResponse
 from product.domain.custom_exceptions import (
     InvalidIdError,
     ProductNotFoundError,
@@ -62,18 +64,41 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
 
     @handle_db_errors("fetching")
     def get_all(
-        self, start: int, end: int, category: str | None, date: datetime | None
-    ) -> List[Product]:
-        filters = {}
+        self,
+        id: str,
+        limit: int,
+        category: str | None,
+        date: datetime | None,
+        created_after: datetime | None,
+    ) -> ProductsRepoResponse:
+        print(created_after)
+        query = Q()
+
         if category is not None:
-            filters["category"] = _validate_object_id(category, "CategoryId")
-        if date is not None:
-            filters["created_at__gt"] = date
-        documents = list(ProductDocument.objects(**filters)[start:end])
+            query = query & Q(category=_validate_object_id(category, "CategoryId"))
+
+        if created_after is not None:
+            query = query & Q(created_at__gt=created_after)
+
+        if date is not None and id is not None:
+            query = query & (
+                Q(created_at__gt=date)
+                | (Q(created_at=date) & Q(id__gt=_validate_object_id(id)))
+            )
+        documents = list(
+            ProductDocument.objects(query).order_by("created_at", "id").limit(limit + 1)
+        )
+
         products = []
         for doc in documents:
             products.append(_to_entity_product(doc))
-        return products
+
+        has_more = False
+        if len(products) > limit:
+            has_more = True
+            products = products[:limit]
+
+        return ProductsRepoResponse(products=products, has_more=has_more)
 
     @handle_db_errors("saving")
     def add(self, item: ProductCreationData) -> Product:

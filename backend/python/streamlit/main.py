@@ -1,130 +1,188 @@
-import pandas as pd
-import requests
 import streamlit as st
+import requests
+import pandas as pd
 from urllib.parse import quote
+
+BACKEND_URL = "http://localhost:8000"
+PRODUCT_URL = f"{BACKEND_URL}/products/"
+CATEGORY_URL = f"{BACKEND_URL}/categories/"
+QUERY_URL = f"{BACKEND_URL}/query/"
+
+if "current_cursor" not in st.session_state:
+    st.session_state.current_cursor = None
+
+if "prev_stack" not in st.session_state:
+    st.session_state.prev_stack = []
+
+if "category" not in st.session_state:
+    st.session_state.category = None
+
+if "query" not in st.session_state:
+    st.session_state.query = ""
+
+if "mode" not in st.session_state:
+    st.session_state.mode = "browse"  # browse | search
+
+if "last_category" not in st.session_state:
+    st.session_state.last_category = None
+
+if "similar_query" in st.session_state:
+    st.session_state.query = st.session_state.similar_query
+    del st.session_state.similar_query
+
+
+@st.cache_data()
+def get_categories():
+    response = requests.get(CATEGORY_URL)
+    if response.status_code == 200:
+        data = response.json()
+        return pd.DataFrame(data)["title"].tolist()
+    return []
+
+
+@st.cache_data()
+def fetch_products(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
 
 st.title("Product Inventory")
 
-url = "http://localhost:8000"
+categories = get_categories()
 
-if "page" not in st.session_state:
-    st.session_state.page = 1
-if "limit" not in st.session_state:
-    st.session_state.limit = 10
+st.text_input("Search", key="query")
 
-
-page = st.session_state.page
-limit = st.session_state.limit
-category = ""
-
-response = requests.get(f"{url}/categories/")
-
-categories = None
-
-if response.status_code == 200:
-    data = response.json()
-    df = pd.DataFrame(data)
-    categories = df["title"]
-    category = st.sidebar.selectbox(
-        "Category of product you want : ",
-        categories,
-        index=None,
-        placeholder="Choose the Category...",
-    )
-
-product_url = f"{url}/products/?page={page}&limit={limit}"
-query_url = f"{url}/query/"
-
-search_text = st.text_input("Search", placeholder="Search products")
+st.sidebar.selectbox(
+    "Category",
+    categories,
+    index=None,
+    key="category",
+    placeholder="Choose the Category...",
+)
 
 if st.button("Search"):
-    if search_text.strip():
-        st.session_state.query_params = search_text
-        st.session_state.page = 1
-    else:
-        st.session_state.pop("query_params", None)
-    st.rerun()
+    if len(st.session_state.query) > 3:
+        st.session_state.mode = "search"
+        st.session_state.current_cursor = None
+        st.session_state.prev_stack = []
 
-if category:
-    product_url = product_url + f"&category={quote(category)}"
+if st.session_state.mode == "search":
+    if st.button("Clear Search"):
+        st.session_state.mode = "browse"
+        st.session_state.pop("query", None)
+        st.rerun()
 
-next_page = None
 
-request_url = product_url
+if st.session_state.category != st.session_state.last_category:
+    st.session_state.current_cursor = None
+    st.session_state.prev_stack = []
+    st.session_state.last_category = st.session_state.category
 
-if "query_params" in st.session_state:
-    request_url = f"{query_url}?q={st.session_state.query_params}"
 
-response = requests.get(request_url)
+def build_url():
+    if st.session_state.mode == "search":
+        return QUERY_URL + f"?q={quote(st.session_state.query)}"
 
-if response.status_code == 200:
-    data = response.json()
-    dataframe = pd.DataFrame(data, columns=["name", "description", "price", "quantity"])
-    dataframe["stock_level"] = dataframe["quantity"].apply(
-        lambda x: "Normal" if x >= 100 else "Low"
-    )
+    url = PRODUCT_URL
+    params = []
 
-    print(dataframe)
-    for idx, row in dataframe.iterrows():
+    if st.session_state.current_cursor:
+        params.append(f"cursor={st.session_state.current_cursor}")
 
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 3, 1, 1, 1, 2])
-        col1.write(row["name"])
-        col2.write(row["description"])
-        col3.write(row["price"])
-        col4.write(str(row["quantity"]))
-        col5.write(row["stock_level"])
+    if st.session_state.category:
+        params.append(f"category={quote(st.session_state.category)}")
 
-        if col6.button("Similar", key=f"similar_{idx}"):
-            print(row["name"], " ", row["description"])
-            st.session_state.query_params = row["description"]
-            st.session_state.page = 1
-            st.rerun()
+    if params:
+        url += "?" + "&".join(params)
 
-        col1, col2 = st.columns(2, gap="small")
+    return url
 
-    with col1:
-        if len(data) != 0:
-            next_page = st.button("Next")
-            if next_page:
-                st.session_state.page = st.session_state.page + 1
+
+url = build_url()
+json_response = fetch_products(url)
+
+
+if json_response:
+    data = json_response["data"]
+
+    if st.session_state.mode == "search":
+        st.info(f"Showing similar products for: {st.session_state.query[:80]}...")
+
+    for i, product in enumerate(data):
+        col1, col2 = st.columns([4, 1])
+
+        with col1:
+            st.write(f"**{product['name']}**")
+            st.write(f"Description: {product['description'][:120]}...")
+            st.write(f"Price: ₹{product['price']}")
+            st.write(f"Quantity: {product['quantity']}")
+            st.write(f"Category: {product['category']}")
+
+        with col2:
+            if st.button("Find Similar", key=f"similar_{i}"):
+                st.session_state.similar_query = product["description"]
+                st.session_state.mode = "search"
+                st.session_state.current_cursor = None
+                st.session_state.prev_stack = []
                 st.rerun()
-    with col2:
-        if st.session_state.page > 1:
-            prev_page = st.button("Prev")
-            if prev_page:
-                st.session_state.page = st.session_state.page - 1
-                st.rerun()
 
-else:
-    st.error("Unable to fetch data")
+        st.divider()
 
-if categories is not None:
-    form1 = st.form("Add Product Form")
-    product_name = form1.text_input("Name", max_chars=50)
-    product_description = form1.text_input("Description", max_chars=200)
-    product_brand = form1.text_input("Brand", max_chars=50)
-    product_price = form1.number_input("Price", min_value=0)
-    product_quantity = form1.number_input("Quantity", min_value=0)
-    product_category = form1.selectbox("Category", categories)
+    if st.session_state.mode == "browse":
+        next_cursor = json_response.get("next_cursor")
+        has_more = json_response.get("has_more", False)
 
-    clicked = form1.form_submit_button("Submit")
+        col1, col2 = st.columns(2)
 
-    request_json = {
-        "name": product_name,
-        "description": product_description,
-        "brand": product_brand,
-        "price": product_price,
-        "quantity": product_quantity,
-        "category": product_category,
-    }
+        with col1:
+            if st.session_state.prev_stack or st.session_state.current_cursor:
+                if st.button("Prev"):
+                    if st.session_state.prev_stack:
+                        st.session_state.current_cursor = (
+                            st.session_state.prev_stack.pop()
+                        )
+                    else:
+                        st.session_state.current_cursor = None
+                    st.rerun()
 
-    if clicked:
-        response = requests.post(url=f"{url}/products/", json=request_json)
-        print(response)
+        with col2:
+            if has_more:
+                if st.button("Next"):
+                    if st.session_state.current_cursor:
+                        st.session_state.prev_stack.append(
+                            st.session_state.current_cursor
+                        )
+                    st.session_state.current_cursor = next_cursor
+                    st.rerun()
 
-        if response.status_code == 201:
-            st.success("Successfully added product")
-        else:
-            st.error("Unable to add product")
+if categories:
+    with st.form("Add Product Form"):
+        st.subheader("Add Product")
 
-st.toast("Data loaded successfully")
+        product_name = st.text_input("Name", max_chars=50)
+        product_description = st.text_input("Description", max_chars=200)
+        product_brand = st.text_input("Brand", max_chars=50)
+        product_price = st.number_input("Price", min_value=0)
+        product_quantity = st.number_input("Quantity", min_value=0)
+        product_category = st.selectbox("Category", categories)
+
+        submitted = st.form_submit_button("Submit")
+
+        if submitted:
+            request_json = {
+                "name": product_name,
+                "description": product_description,
+                "brand": product_brand,
+                "price": product_price,
+                "quantity": product_quantity,
+                "category": product_category,
+            }
+
+            response = requests.post(url=f"{BACKEND_URL}/products/", json=request_json)
+
+            if response.status_code == 201:
+                st.success("Successfully added product")
+            else:
+                st.error("Unable to add product")

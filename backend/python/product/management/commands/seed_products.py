@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from product.infrastructure.models import ProductDocument, CategoryDocument
+import datetime
 
 
 class Command(BaseCommand):
@@ -293,6 +294,8 @@ class Command(BaseCommand):
                     set__price=product_data["price"],
                     set__quantity=product_data["quantity"],
                     set__category=category_doc,
+                    set__created_at=datetime.datetime.now(),
+                    set__updated_at=datetime.datetime.now(),
                     upsert=True,
                 )
 

@@ -5,6 +5,7 @@ from product.application.dto.category.outbound.request import (
     CategoryUpdateData,
 )
 
+from product.application.dto.products.outbound.response import ProductsRepoResponse
 from product.domain.entities.product import Product
 from product.domain.entities.category import Category
 
@@ -28,10 +29,6 @@ class CategoryRepositoryPorts(ABC):
 
     @abstractmethod
     def update(self, id: str, item: CategoryUpdateData):
-        pass
-
-    @abstractmethod
-    def get_all_products(self, id: str) -> List[Product]:
         pass
 
     @abstractmethod

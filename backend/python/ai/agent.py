@@ -11,12 +11,6 @@ agent = create_agent(
 )
 
 
-# response = agent.invoke({
-#     "messages" : [
-#         HumanMessage("find the products added after 20th march 2026")
-#     ]
-# })
-
 for chunk in agent.stream(
     {
         "messages": [

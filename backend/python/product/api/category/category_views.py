@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-
+from product.api.products.product_serializers import ProductGetSerializer
 from product.application.dto.category.inbound.request import (
     CreateCategoryRequest,
     UpdateCategoryRequest,
@@ -119,12 +119,29 @@ class CategoryController(ViewSet):
             return Response(data=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_products(self, request, pk):
-        try:
-            products = self.service.get_all_products(id=pk)
-            from product.api.products.product_serializers import ProductGetSerializer
 
-            serializer = ProductGetSerializer(products, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        query_params = request.query_params
+        cursor = query_params.get("cursor")
+        limit = query_params.get("limit") or 10
+
+        if not isParsable(limit) or int(limit) == 0:
+            return Response(
+                data="Limit should be integer and greater than 0",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            products = self.service.get_all_products(
+                id=pk, cursor=cursor, limit=int(limit)
+            )
+            serializer = ProductGetSerializer(products.products, many=True)
+            return Response(
+                {
+                    "data": serializer.data,
+                    "has_more": products.has_more,
+                    "next_cursor": products.next_cursor,
+                },
+                status=status.HTTP_200_OK,
+            )
         except CategoryNotFoundError as e:
             return Response(data=str(e), status=status.HTTP_404_NOT_FOUND)
         except CategoryRepositoryError as e:
@@ -133,8 +150,6 @@ class CategoryController(ViewSet):
     def get_product(self, request, pk, product_id):
         try:
             product = self.service.get_product(id=pk, product_id=product_id)
-            from product.api.products.product_serializers import ProductGetSerializer
-
             serializer = ProductGetSerializer(product)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except CategoryNotFoundError as e:
