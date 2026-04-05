@@ -1,5 +1,6 @@
 from product_rag.domain.custom_exceptions import RAGRepositoryError
 from product_rag.domain.entities.chat import ChatHistory
+from product_rag.infrastructure.prompt import MULTI_QUERY_PROMPT, SYSTEM_PROMPT
 from ..application.ports.outbound.rag_repo_ports import RAGRepoPorts
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -8,6 +9,8 @@ from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from langchain_cohere import CohereEmbeddings
 from typing import List
 from dotenv import load_dotenv
+from langsmith import traceable
+from langchain_classic.retrievers.multi_query import MultiQueryRetriever
 
 load_dotenv()
 
@@ -15,10 +18,14 @@ load_dotenv()
 class RAGRepository(RAGRepoPorts):
 
     def __init__(self):
-        self.model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.5)
+        self.model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=1)
         self.embeddings = CohereEmbeddings(model="embed-english-v3.0")
         self.vector_store = Chroma(
             collection_name="product", embedding_function=self.embeddings
+        )
+        self.retriever = MultiQueryRetriever.from_llm(
+            retriever = self.vector_store.as_retriever(search_kwargs = {"k" : 4}),
+            llm = self.model
         )
 
     def load_document(self, file_path) -> str:
@@ -27,7 +34,7 @@ class RAGRepository(RAGRepoPorts):
         return docs[0].page_content
 
     def text_splitter(
-        self, text: str, overlap: int = 0, chunk_size: int = 1000
+        self, text: str, overlap: int = 0, chunk_size: int = 500
     ) -> List[str]:
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size, chunk_overlap=overlap
@@ -43,9 +50,18 @@ class RAGRepository(RAGRepoPorts):
                 f"Unexcpected error while uploading to db. {str(e)}"
             )
 
-    def retrieve_relevant_chunks(self, query: str, count: int = 3) -> List[str]:
+    def retrieve_relevant_chunks(self, chat_history: ChatHistory, count: int = 3) -> List[str]:
         try:
-            docs = self.vector_store.similarity_search(query, k=count)
+
+            formatted_history = ""
+            for message in chat_history[:-1]:
+                role = "User" if message.role.value == "user" else "Assistant"
+                formatted_history += f"{role}: {message.text}\n"
+
+            latest_question = chat_history[-1].text
+
+            query = MULTI_QUERY_PROMPT.format(chat_history=formatted_history, question = latest_question)
+            docs = self.retriever.invoke(query)
             return [doc.page_content for doc in docs]
         except Exception as e:
             raise RAGRepositoryError(
@@ -53,22 +69,15 @@ class RAGRepository(RAGRepoPorts):
             )
 
     def get_llm_response(self, chat_history: ChatHistory, chunks: List[str]) -> str:
-        system_prompt = """You are a precise document assistant. Your job is to answer user queries strictly based on the provided document context.
 
-    Rules:
-    - Answer ONLY from the provided context. Do not use prior knowledge.
-    - If the context lacks relevant information, respond exactly: "The document does not contain any information regarding this topic."
-    - Be concise and direct. Avoid filler phrases like "Based on the document..." or "According to the context...".
-    - If the answer is partially available, provide what's found and clearly state what's missing.
-    - Preserve technical terms, names, and numbers exactly as they appear in the context."""
+        system_prompt = SYSTEM_PROMPT
 
         context = "\n".join(f"- {chunk}" for chunk in chunks)
 
         conversation = ""
-        if chat_history:
-            for message in chat_history[:-1]:
-                role = "User" if message.role.value == "user" else "Assistant"
-                conversation += f"{role}: {message.text}\n"
+        for message in chat_history[:-1]:
+            role = "User" if message.role.value == "user" else "Assistant"
+            conversation += f"{role}: {message.text}\n"
 
         latest_query = chat_history[-1].text if chat_history else ""
 

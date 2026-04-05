@@ -3,6 +3,7 @@ from product_rag.domain.entities.chat import ROLE, Chat
 from .ports.inbound.rag_service_ports import RAGServicePorts
 from .ports.outbound.rag_repo_ports import RAGRepoPorts
 import tempfile
+from langsmith import traceable
 
 
 class RAGService(RAGServicePorts):
@@ -18,9 +19,10 @@ class RAGService(RAGServicePorts):
             tmp_path = tmp.name
 
         content = self.repository.load_document(tmp_path)
-        chunks = self.repository.text_splitter(content, 0, 1000)
+        chunks = self.repository.text_splitter(content, 0, 500)
         self.repository.save_chunks(chunks)
 
+    @traceable
     def query(self, prompt) -> str:
 
         if len(prompt) == 0:
@@ -28,11 +30,11 @@ class RAGService(RAGServicePorts):
         elif prompt[len(prompt) - 1]["role"] != "user":
             raise InvalidChatHistory("Latest message must be from user")
 
-        chunks = self.repository.retrieve_relevant_chunks(
-            query=prompt[len(prompt) - 1]["text"]
-        )
         chat_history = list(
             map(lambda x: Chat(text=x["text"], role=ROLE(x["role"])), prompt)
+        )
+        chunks = self.repository.retrieve_relevant_chunks(
+            chat_history=chat_history
         )
         llm_response = self.repository.get_llm_response(chat_history, chunks)
         return llm_response

@@ -1,7 +1,9 @@
 from provider import model
 from schema import ProductOutputSchema
+from langsmith import traceable
 
 
+@traceable
 def generate(prompt: str):
     try:
         response = model.with_structured_output(ProductOutputSchema).invoke(prompt)
@@ -11,6 +13,7 @@ def generate(prompt: str):
         print(str(e))
 
 
+@traceable
 def generate_toys():
     prompt = """Suppose you are a store manager and supposed to add toys to your database. 
                 Generate data about 10 toys based on the schema given below"""
