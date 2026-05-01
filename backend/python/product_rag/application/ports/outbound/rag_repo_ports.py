@@ -18,7 +18,9 @@ class RAGRepoPorts(ABC):
         pass
 
     @abstractmethod
-    def retrieve_relevant_chunks(self, chat_history: ChatHistory, count: int = 3) -> List[str]:
+    def retrieve_relevant_chunks(
+        self, chat_history: ChatHistory, count: int = 3
+    ) -> List[str]:
         pass
 
     @abstractmethod

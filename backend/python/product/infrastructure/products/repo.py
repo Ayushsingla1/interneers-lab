@@ -86,7 +86,10 @@ class ProductRepository(product_repo_port.ProductRepositoryPorts):
                 | (Q(created_at=date) & Q(id__gt=_validate_object_id(id)))
             )
         documents = list(
-            ProductDocument.objects(query).order_by("created_at", "id").limit(limit + 1)
+            ProductDocument.objects(query)
+            .order_by("created_at", "id")
+            .limit(limit + 1)
+            .select_related("category")
         )
 
         products = []

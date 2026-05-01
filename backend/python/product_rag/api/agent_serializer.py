@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 
-class UploadSerializer(serializers.Serializer):
+class AgentUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
 
     def validate_file(self, value):
@@ -10,10 +10,11 @@ class UploadSerializer(serializers.Serializer):
         return value
 
 
-class ChatSerializer(serializers.Serializer):
+class AgentChatSerializer(serializers.Serializer):
     role = serializers.ChoiceField(choices=["user", "ai"])
     text = serializers.CharField()
 
 
-class ChatListSerializer(serializers.Serializer):
-    chats = ChatSerializer(many=True)
+class AgentQuerySerializer(serializers.Serializer):
+    chats = AgentChatSerializer(many=True)
+    has_file_context = serializers.BooleanField(default=False)

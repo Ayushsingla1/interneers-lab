@@ -35,7 +35,7 @@ if "similar_query" in st.session_state:
 def get_categories():
     response = requests.get(CATEGORY_URL)
     if response.status_code == 200:
-        data = response.json()
+        data = response.json()["data"]
         return pd.DataFrame(data)["title"].tolist()
     return []
 

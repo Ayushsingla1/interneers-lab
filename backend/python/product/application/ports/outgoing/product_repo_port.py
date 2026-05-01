@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List
 
-from torch._inductor.ir import NoneAsConstantBuffer
-
 from product.application.dto.products.outbound.request import (
     ProductCreationData,
     ProductUpdateData,

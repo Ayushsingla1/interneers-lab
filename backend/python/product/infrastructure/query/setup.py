@@ -1,7 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from qdrant_client import models, QdrantClient
 
-encoder = SentenceTransformer("all-MiniLM-L6-v2")
+encoder = SentenceTransformer("all-mpnet-base-v2")
 
 client = QdrantClient(":memory:")
 

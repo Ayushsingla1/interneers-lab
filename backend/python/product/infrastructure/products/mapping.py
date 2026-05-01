@@ -12,7 +12,7 @@ def _to_entity_product(product: ProductDocument) -> Product:
             price=product.price,
             id=str(product.id),
             brand=product.brand,
-            category=product.category.id,
+            category=product.category.title,
             created_at=product.created_at,
             updated_at=product.updated_at,
         )

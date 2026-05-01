@@ -19,7 +19,9 @@ class QueryRepository(QueryRepositoryPorts):
             points.append(
                 models.PointStruct(
                     id=idx,
-                    vector=self.encoder.encode(product.description),
+                    vector=self.encoder.encode(
+                        product.name + " " + product.description
+                    ),
                     payload={
                         "id": str(product.id),
                         "name": product.name,

@@ -4,3 +4,7 @@ class InvalidChatHistory(Exception):
 
 class RAGRepositoryError(Exception):
     pass
+
+
+class AgentError(Exception):
+    pass

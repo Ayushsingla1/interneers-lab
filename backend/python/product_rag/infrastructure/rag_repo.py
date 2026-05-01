@@ -24,8 +24,8 @@ class RAGRepository(RAGRepoPorts):
             collection_name="product", embedding_function=self.embeddings
         )
         self.retriever = MultiQueryRetriever.from_llm(
-            retriever = self.vector_store.as_retriever(search_kwargs = {"k" : 4}),
-            llm = self.model
+            retriever=self.vector_store.as_retriever(search_kwargs={"k": 4}),
+            llm=self.model,
         )
 
     def load_document(self, file_path) -> str:
@@ -50,7 +50,9 @@ class RAGRepository(RAGRepoPorts):
                 f"Unexcpected error while uploading to db. {str(e)}"
             )
 
-    def retrieve_relevant_chunks(self, chat_history: ChatHistory, count: int = 3) -> List[str]:
+    def retrieve_relevant_chunks(
+        self, chat_history: ChatHistory, count: int = 3
+    ) -> List[str]:
         try:
 
             formatted_history = ""
@@ -60,7 +62,9 @@ class RAGRepository(RAGRepoPorts):
 
             latest_question = chat_history[-1].text
 
-            query = MULTI_QUERY_PROMPT.format(chat_history=formatted_history, question = latest_question)
+            query = MULTI_QUERY_PROMPT.format(
+                chat_history=formatted_history, question=latest_question
+            )
             docs = self.retriever.invoke(query)
             return [doc.page_content for doc in docs]
         except Exception as e:
